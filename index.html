@@ -331,9 +331,25 @@
 
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
+
+      // Senza Web Crypto (es. pagina aperta da file:// o browser molto vecchio)
+      // l'accesso non è possibile: messaggio chiaro invece di un fallimento muto.
+      if (!window.crypto || !window.crypto.subtle) {
+        msg.textContent = "Accesso non disponibile qui. Apri il sito da https://achillecipriani.it";
+        msg.classList.add("show"); msg.classList.remove("ok");
+        return;
+      }
+
       btn.disabled = true;
       msg.textContent = "Verifica…"; msg.classList.add("show", "ok");
-      var url = await unlock(company.value, password.value);
+
+      var url = null;
+      try {
+        url = await unlock(company.value, password.value);
+      } catch (err) {
+        url = null;
+      }
+
       if (url) {
         msg.textContent = "Accesso consentito — reindirizzamento…";
         setTimeout(function () { window.location.href = url; }, 700);
