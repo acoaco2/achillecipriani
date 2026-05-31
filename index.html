@@ -303,7 +303,10 @@
 
     async function unlock(companyVal, passwordVal) {
       var enc = new TextEncoder();
-      var phrase = enc.encode(companyVal.trim().toLowerCase() + ":" + passwordVal);
+      var co = companyVal.trim().toLowerCase();
+      // Scorciatoia DJ: credenziali dj / dj -> sezione DJ (pubblica, percorso relativo)
+      if (co === "dj" && passwordVal === "dj") return "dj/";
+      var phrase = enc.encode(co + ":" + passwordVal);
       for (var i = 0; i < ENTRIES.length; i++) {
         var e = ENTRIES[i];
         try {
