@@ -16,8 +16,6 @@
     --bg: #faf8f3;
     --ink: #1b1a17;
     --muted: #8c887e;
-    --line: #d9d4c7;
-    --error: #9a4b3f;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; }
@@ -50,120 +48,43 @@
     letter-spacing: 0.01em;
     animation: rise 1s 0.2s ease both;
   }
-
-  /* Gate di accesso */
-  .gate {
-    width: 100%;
-    max-width: 300px;
-    display: flex;
-    flex-direction: column;
-    gap: 1.3rem;
-    animation: rise 0.9s 0.05s ease both;
-  }
+  .noaccess { animation: rise 0.9s 0.05s ease both; }
   .gate-label {
     font-size: 11px;
     letter-spacing: 0.3em;
     text-transform: uppercase;
     color: var(--muted);
+    margin-bottom: 1.1rem;
   }
-  .field { display: flex; flex-direction: column; gap: 0.5rem; text-align: left; }
-  .field span {
-    font-size: 10.5px;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .pw-wrap { position: relative; display: flex; align-items: stretch; }
-  .field input {
-    flex: 1;
-    width: 100%;
-    border: none;
-    border-bottom: 1px solid var(--line);
-    background: transparent;
+  .hint {
     font-family: "Cormorant Garamond", serif;
-    font-size: 1.35rem;
+    font-size: 1.4rem;
     color: var(--ink);
-    padding: 0.35rem 2.2rem 0.35rem 0;
+  }
+  .hint a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--muted);
+    padding-bottom: 1px;
     transition: border-color 0.3s ease;
   }
-  .field input:focus { outline: none; border-color: var(--ink); }
-  .field input::placeholder { color: #c4bfb2; }
-  .pw-toggle {
-    position: absolute;
-    right: 0;
-    bottom: 0.35rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.2rem;
-    color: var(--muted);
-    display: inline-flex;
-    align-items: center;
-    transition: color 0.3s ease;
-  }
-  .pw-toggle:hover { color: var(--ink); }
-  .pw-toggle:focus-visible { outline: 1px solid var(--ink); outline-offset: 2px; }
-  .pw-toggle svg { display: block; }
-  .submit {
-    margin-top: 0.4rem;
-    align-self: flex-start;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--ink);
-    padding: 0.4rem 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.7rem;
-    transition: gap 0.3s ease, opacity 0.3s ease;
-  }
-  .submit:hover { gap: 1.1rem; }
-  .submit[disabled] { opacity: 0.45; cursor: default; }
-  .msg {
-    min-height: 1.1rem;
-    font-size: 12.5px;
-    color: var(--error);
-    letter-spacing: 0.02em;
-    text-align: left;
-    opacity: 0;
-    transition: opacity 0.25s ease;
-  }
-  .msg.show { opacity: 1; }
-  .msg.ok { color: var(--muted); }
-  .shake { animation: shake 0.4s ease; }
+  .hint a:hover { border-color: var(--ink); }
 
   @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-  @keyframes shake {
-    10%, 90% { transform: translateX(-1px); }
-    20%, 80% { transform: translateX(2px); }
-    30%, 50%, 70% { transform: translateX(-4px); }
-    40%, 60% { transform: translateX(4px); }
-  }
   @media (prefers-reduced-motion: reduce) {
-    .overline, .name, .gate { animation: none; }
+    .overline, .name, .noaccess { animation: none; }
   }
 </style>
 </head>
 <body>
   <main>
-    <!-- Gate: chiede la password. Il contenuto reale è cifrato e non presente in chiaro nel sorgente. -->
-    <form class="gate" id="gate" autocomplete="off">
+    <!-- Mostrato quando non si ha la chiave (accesso diretto, senza passare dalla home) -->
+    <div class="noaccess" id="noaccess" hidden>
       <div class="gate-label">Area riservata</div>
-      <label class="field">
-        <span>Password</span>
-        <div class="pw-wrap">
-          <input id="pw" type="password" placeholder="••••••••" required />
-          <button type="button" class="pw-toggle" id="pwToggle" aria-label="Mostra password" aria-pressed="false"></button>
-        </div>
-      </label>
-      <p class="msg" id="msg" aria-live="polite"></p>
-      <button class="submit" type="submit" id="submitBtn">Entra <span>→</span></button>
-    </form>
+      <p class="hint">Accedi dalla <a href="/">pagina iniziale</a>.</p>
+    </div>
 
-    <!-- Qui viene iniettato il contenuto decifrato -->
+    <!-- Contenuto decifrato -->
     <div id="content" hidden></div>
   </main>
 
@@ -171,43 +92,48 @@
   /*
     CONTENUTO CIFRATO (AES-GCM)
     ───────────────────────────
-    Il contenuto della pagina è cifrato: non compare in chiaro nel sorgente.
-    La chiave deriva dalla password (PBKDF2, 250.000 iterazioni, SHA-256).
-    Senza la password corretta il contenuto non è ricavabile.
-    Per aggiornare il contenuto: rigenerare il blocco DATA con la stessa password.
+    Il contenuto non compare in chiaro nel sorgente. La chiave (token) NON è
+    qui: arriva solo dal login sulla pagina iniziale, che reindirizza con
+    #k=<token> nel frammento. Il token viene salvato in sessionStorage e il
+    frammento ripulito dall'URL. Chi apre /Logofarma direttamente non ha il
+    token e non vede alcun contenuto.
+    Per aggiornare il contenuto: rigenerare DATA con lo stesso token e
+    rigenerare la voce cifrata della home.
   */
   (function () {
     var DATA = {
-      salt: "g+b/6/yXZqwCXp3IbgTtgg==",
-      iv: "Hnbm+ON56jbEPV7D",
-      ct: "x0+sQqYJpAno/nZEh6FUlJApOMoRtLdZlR4pT/SSttXQCSg+jXuXEp+3KXyz0ctQlZdzMEY7nGpOP5zLqoiq0l4ngk+aID5akHmnnLm+roitXW0fRJVo7j0JRkK7Kw==",
+      salt: "KX7yF933da1mtbYh8AH4Gw==",
+      iv: "6yG2N1zx+6qaCZyo",
+      ct: "/b0YYIrUIidFlMqiduRpl918xL85Et688o+dyjFZE+mXAnR/63AgjsToNEKFKbpkOmtsJ6zTZRT71DbTldsZQTxK6zhRC4yyZl+5OQZdKKZ49HnLfkRZedBiG1rLPA==",
       iterations: 250000
     };
+    var SS_KEY = "lf_token";
 
-    var gate = document.getElementById("gate");
-    var pw = document.getElementById("pw");
-    var msg = document.getElementById("msg");
-    var btn = document.getElementById("submitBtn");
+    var noaccess = document.getElementById("noaccess");
     var content = document.getElementById("content");
-    var pwToggle = document.getElementById("pwToggle");
 
-    var EYE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-    var EYE_OFF = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
-    pwToggle.innerHTML = EYE;
-    pwToggle.addEventListener("click", function () {
-      var show = pw.type === "password";
-      pw.type = show ? "text" : "password";
-      pwToggle.innerHTML = show ? EYE_OFF : EYE;
-      pwToggle.setAttribute("aria-pressed", show ? "true" : "false");
-      pwToggle.setAttribute("aria-label", show ? "Nascondi password" : "Mostra password");
-      pw.focus();
-    });
+    function showNoAccess() { noaccess.hidden = false; }
 
     function b64d(s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); }
 
-    async function decrypt(passwordVal) {
+    function readToken() {
+      // 1) dal frammento dell'URL (#k=...) lasciato dal redirect della home
+      var h = location.hash || "";
+      var m = h.match(/[#&]k=([^&]+)/);
+      if (m) {
+        var tok = decodeURIComponent(m[1]);
+        try { sessionStorage.setItem(SS_KEY, tok); } catch (e) {}
+        // ripulisce il frammento dall'URL (senza ricaricare)
+        try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+        return tok;
+      }
+      // 2) già sbloccato in questa sessione (es. refresh)
+      try { return sessionStorage.getItem(SS_KEY); } catch (e) { return null; }
+    }
+
+    async function decrypt(token) {
       var enc = new TextEncoder();
-      var km = await crypto.subtle.importKey("raw", enc.encode(passwordVal.trim()), "PBKDF2", false, ["deriveKey"]);
+      var km = await crypto.subtle.importKey("raw", enc.encode(token), "PBKDF2", false, ["deriveKey"]);
       var key = await crypto.subtle.deriveKey(
         { name: "PBKDF2", salt: b64d(DATA.salt), iterations: DATA.iterations, hash: "SHA-256" },
         km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
@@ -216,42 +142,18 @@
       return new TextDecoder().decode(pt);
     }
 
-    function fail() {
-      msg.textContent = "Password non corretta. Riprova.";
-      msg.classList.add("show"); msg.classList.remove("ok");
-      gate.classList.remove("shake"); void gate.offsetWidth; gate.classList.add("shake");
-    }
-
-    gate.addEventListener("submit", async function (e) {
-      e.preventDefault();
-
-      if (!window.crypto || !window.crypto.subtle) {
-        msg.textContent = "Non disponibile qui. Apri da https://achillecipriani.it/Logofarma";
-        msg.classList.add("show"); msg.classList.remove("ok");
-        return;
-      }
-
-      btn.disabled = true;
-      msg.textContent = "Verifica…"; msg.classList.add("show", "ok");
-
-      var html = null;
+    (async function () {
+      var token = readToken();
+      if (!token || !window.crypto || !window.crypto.subtle) { showNoAccess(); return; }
       try {
-        html = await decrypt(pw.value);
-      } catch (_) {
-        html = null;
-      }
-
-      if (html) {
+        var html = await decrypt(token);
         content.innerHTML = html;
         content.hidden = false;
-        gate.remove();
-      } else {
-        btn.disabled = false;
-        fail();
+      } catch (_) {
+        try { sessionStorage.removeItem(SS_KEY); } catch (e) {}
+        showNoAccess();
       }
-    });
-
-    pw.addEventListener("input", function () { msg.classList.remove("show"); });
+    })();
   })();
 </script>
 </body>
