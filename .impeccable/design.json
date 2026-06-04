@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-02T00:00:00Z",
+  "title": "Design System: Achille Cipriani — Consulenza",
+  "extensions": {
+    "colorMeta": {
+      "petrol": { "role": "primary", "displayName": "Verde Petrolio", "canonical": "#1f5d63", "tonalRamp": ["#0c2e32", "#123f44", "#16555b", "#1f5d63", "#2f7178", "#5a9aa0", "#8fc3c7", "#cfe4e6"] },
+      "mint": { "role": "secondary", "displayName": "Menta Tenue", "canonical": "#8fd4c8", "tonalRamp": ["#234b46", "#2f6b62", "#3f8b80", "#5fb1a4", "#8fd4c8", "#b0e1d9", "#cdece7", "#e7f6f3"] },
+      "cream": { "role": "neutral", "displayName": "Crema", "canonical": "#faf8f3", "tonalRamp": ["#3a372f", "#5c574b", "#807a6c", "#a39c8c", "#c4bdac", "#ddd6c7", "#efe9dc", "#faf8f3"] },
+      "ink": { "role": "neutral", "displayName": "Inchiostro", "canonical": "#1b1a17", "tonalRamp": ["#1b1a17", "#33312b", "#4d4a41", "#6b6759", "#8f8a7c", "#b3ad9e", "#d9d4c7", "#faf8f3"] },
+      "muted": { "role": "neutral", "displayName": "Muted", "canonical": "#706b5e", "tonalRamp": ["#2c2a24", "#403d34", "#565244", "#706b5e", "#8f8a7c", "#aaa493", "#c8c2b3", "#e7e2d6"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Il nome 'Achille Cipriani'. Una sola occorrenza per schermata." },
+      "field-value": { "displayName": "Valore campo", "purpose": "Testo digitato nei campi, in serif." },
+      "label": { "displayName": "Etichetta", "purpose": "Occhielli e nomi-campo, maiuscolo spaziato, solo testi brevi." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "rise", "value": "transform/opacity, 0.9–1s ease, fill both, da translateY(14px)+opacity 0", "purpose": "Entrata scaglionata di logo, nome, riga, form. Stato base sempre visibile." },
+      { "name": "shake", "value": "translateX ±4px, 0.4s ease", "purpose": "Feedback su credenziali errate." },
+      { "name": "state-ease", "value": "0.25s ease", "purpose": "Hover/focus di pulsante e campi." }
+    ],
+    "breakpoints": [
+      { "name": "stack", "value": "760px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "La sola azione della pagina: accesso all'area riservata. Pieno, deciso.",
+      "html": "<button class=\"ds-btn-primary\">Accedi <span aria-hidden=\"true\">&rarr;</span></button>",
+      "css": ".ds-btn-primary { background:#1f5d63; color:#faf8f3; border:none; border-radius:8px; padding:16px 26px; min-height:44px; font-family:ui-sans-serif,system-ui,sans-serif; font-size:11px; letter-spacing:0.28em; text-transform:uppercase; display:inline-flex; align-items:center; justify-content:center; gap:0.7rem; cursor:pointer; transition:background .25s ease, gap .25s ease; } .ds-btn-primary:hover { background:#16555b; gap:1.05rem; } .ds-btn-primary:disabled { opacity:.5; cursor:default; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Campo a sola sottolineatura, valore in serif; il focus accende il petrolio.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Azienda</span><input class=\"ds-input\" placeholder=\"Nome azienda\"></label>",
+      "css": ".ds-field { display:flex; flex-direction:column; gap:8px; text-align:left; } .ds-field-label { font-family:ui-sans-serif,system-ui,sans-serif; font-size:10.5px; letter-spacing:0.22em; text-transform:uppercase; color:#706b5e; } .ds-input { border:none; border-bottom:1px solid #8f8a7c; background:transparent; font-family:'Cormorant Garamond',Georgia,serif; font-size:1.35rem; color:#1b1a17; padding:6px 0; transition:border-color .3s ease; } .ds-input::placeholder { color:#959082; } .ds-input:focus { outline:none; border-color:#1f5d63; }"
+    },
+    {
+      "name": "Password Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Campo password con toggle 'occhio'; area cliccabile espansa a >=44px.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Password</span><span class=\"ds-pw\"><input class=\"ds-input\" type=\"password\" placeholder=\"\\u2022\\u2022\\u2022\\u2022\\u2022\\u2022\\u2022\\u2022\"><button class=\"ds-pw-toggle\" type=\"button\" aria-label=\"Mostra password\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg></button></span></label>",
+      "css": ".ds-pw { position:relative; display:flex; align-items:stretch; } .ds-pw .ds-input { flex:1; width:100%; padding-right:2.2rem; } .ds-pw-toggle { position:absolute; right:0; bottom:6px; background:none; border:none; color:#706b5e; cursor:pointer; padding:3px; display:inline-flex; align-items:center; transition:color .3s ease; } .ds-pw-toggle::before { content:''; position:absolute; inset:-12px -8px -12px -16px; } .ds-pw-toggle:hover { color:#1f5d63; } .ds-pw-toggle:focus-visible { outline:1px solid #1f5d63; outline-offset:2px; }"
+    },
+    {
+      "name": "Drenched Panel",
+      "kind": "custom",
+      "refersTo": "signature",
+      "description": "Componente-firma: pannello identità immerso nel verde petrolio, contenuto in crema.",
+      "html": "<section class=\"ds-panel\"><div class=\"ds-panel-overline\">Consulenza</div><h1 class=\"ds-panel-name\">Achille Cipriani</h1><div class=\"ds-panel-rule\"></div></section>",
+      "css": ".ds-panel { background:radial-gradient(125% 95% at 12% 0%, #235e64 0%, #123f44 100%); color:#faf8f3; padding:48px; border-radius:8px; } .ds-panel-overline { font-family:ui-sans-serif,system-ui,sans-serif; font-size:11px; letter-spacing:0.42em; text-transform:uppercase; color:#cfdedb; } .ds-panel-name { font-family:'Cormorant Garamond',Georgia,serif; font-weight:300; font-size:2.6rem; line-height:1.04; color:#faf8f3; margin:14px 0 0; } .ds-panel-rule { width:54px; height:3px; background:#8fd4c8; border-radius:2px; margin-top:20px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Lo Studio Riservato",
+    "overview": "L'atmosfera è quella di uno studio di consulenza privato: si entra su invito, in un ambiente calmo, ordinato e sicuro di sé. La pagina non vende, accoglie e filtra. L'impianto è uno split editoriale: a sinistra un pannello immerso nel verde petrolio porta l'identità in crema; a destra, su carta crema, vive il form. Il colore o possiede una superficie o è il segnale delle azioni. Rifiuta l'estetica da landing SaaS, l'effetto template e ogni vezzo appariscente.",
+    "keyCharacteristics": [
+      "Split drenched: il petrolio possiede il pannello identità (~50% su desktop), il crema ospita il form.",
+      "Una sola voce display (il nome, serif), tutto il resto sussurra.",
+      "Un gesto primario evidente: la CTA piena.",
+      "Spazio come materiale: gerarchia dal vuoto, non dalla decorazione."
+    ],
+    "rules": [
+      { "name": "La Regola del Pannello", "body": "Il verde petrolio o possiede una superficie (drenched) o è il segnale di un'azione (CTA, focus, link). Mai micro-accento decorativo.", "section": "colors" },
+      { "name": "La Regola della Menta", "body": "La menta esiste solo sul petrolio. Sul crema non compare mai.", "section": "colors" },
+      { "name": "La Regola della Voce Unica", "body": "Un solo elemento display per schermata: il nome.", "section": "typography" },
+      { "name": "La Regola Senza Ombre", "body": "Superfici piatte. Separare con colore o linee da 1px, mai con ombre.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do lasciare che il verde petrolio possieda il pannello identità; sul crema solo per azione.",
+      "Do mantenere il testo principale in Inchiostro (#1b1a17) per serietà e leggibilità (16:1).",
+      "Do tenere una sola voce display (il nome) per schermata.",
+      "Do rispettare i contrasti AA (etichette #706b5e 5:1, bordi campo #8f8a7c 3.25:1).",
+      "Do mantenere il sistema piatto: separare con colore o linee da 1px.",
+      "Do conservare focus visibile, touch >=44px e prefers-reduced-motion."
+    ],
+    "donts": [
+      "Don't ricadere nell'estetica landing SaaS (gradienti decorativi, griglie di card, blocchi-metrica).",
+      "Don't mettere occhielli maiuscoli ripetuti sopra ogni sezione.",
+      "Don't usare effetti appariscenti o palette accese.",
+      "Don't sembrare un template generico.",
+      "Don't spruzzare il petrolio come micro-accento decorativo sul crema.",
+      "Don't portare la menta sul crema.",
+      "Don't aggiungere ombre morbide e larghe.",
+      "Don't legare la visibilità del contenuto a un'animazione."
+    ]
+  }
+}
