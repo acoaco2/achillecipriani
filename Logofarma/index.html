@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Logofarma</title>
+<title>Logofarma — Controllo di gestione</title>
 <meta name="robots" content="noindex, nofollow" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
@@ -13,145 +13,192 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg: #faf8f3;
+    --cream: #faf8f3;
+    --page: #e9e6df;
     --ink: #1b1a17;
-    --muted: #8c887e;
+    --muted: #706b5e;
+    --line: #d9d4c7;
+    --accent: #1f5d63;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { height: 100%; }
+  [hidden] { display: none !important; }
+  html, body { min-height: 100%; }
   body {
-    background: var(--bg);
+    background: var(--page);
     color: var(--ink);
     font-family: ui-sans-serif, -apple-system, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 7vh 24px;
-    text-align: center;
   }
-  .overline {
-    font-size: 11px;
-    letter-spacing: 0.42em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 1.6rem;
-    padding-left: 0.42em;
-    animation: rise 0.9s 0.1s ease both;
+
+  /* Stato "accesso diretto senza token" */
+  .noaccess {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 7vh 24px;
+    background: var(--cream);
   }
-  .name {
-    font-family: "Cormorant Garamond", serif;
-    font-weight: 300;
-    font-size: clamp(2.8rem, 7vw, 4.6rem);
-    line-height: 1.05;
-    letter-spacing: 0.01em;
-    animation: rise 1s 0.2s ease both;
-  }
-  .noaccess { animation: rise 0.9s 0.05s ease both; }
-  .gate-label {
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 1.1rem;
-  }
-  .hint {
-    font-family: "Cormorant Garamond", serif;
-    font-size: 1.4rem;
-    color: var(--ink);
-  }
-  .hint a {
-    color: var(--ink);
-    text-decoration: none;
-    border-bottom: 1px solid var(--muted);
-    padding-bottom: 1px;
-    transition: border-color 0.3s ease;
-  }
+  .gate-label { font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.1rem; }
+  .hint { font-family: "Cormorant Garamond", serif; font-size: 1.4rem; }
+  .hint a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--muted); padding-bottom: 1px; }
   .hint a:hover { border-color: var(--ink); }
 
-  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) {
-    .overline, .name, .noaccess { animation: none; }
+  /* Visualizzatore */
+  .head {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--cream); border-bottom: 1px solid var(--line);
+    padding: 13px clamp(16px, 4vw, 32px);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .head-title { display: inline-flex; align-items: center; gap: 9px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink); font-weight: 600; }
+  .head-title::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .head-meta { font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+
+  .deck {
+    max-width: 1080px; margin: 0 auto;
+    padding: clamp(18px, 4vw, 40px) clamp(12px, 3vw, 24px);
+    display: flex; flex-direction: column; gap: clamp(16px, 3vw, 28px);
+  }
+  .slide {
+    width: 100%; aspect-ratio: 16 / 9;
+    border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+    background: var(--cream);
+  }
+  .slide img { display: block; width: 100%; height: 100%; object-fit: contain; }
+
+  .status {
+    text-align: center; padding: clamp(28px, 12vh, 80px) 24px;
+    font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);
+  }
+  .status.error { color: #9a4b3f; }
+
+  .deck-foot {
+    text-align: center; padding: 8px 24px clamp(28px, 6vw, 48px);
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);
   }
 </style>
 </head>
 <body>
-  <main>
-    <!-- Mostrato quando non si ha la chiave (accesso diretto, senza passare dalla home) -->
-    <div class="noaccess" id="noaccess" hidden>
-      <div class="gate-label">Area riservata</div>
-      <p class="hint">Accedi dalla <a href="/">pagina iniziale</a>.</p>
-    </div>
+  <!-- Accesso diretto senza token: nessun contenuto -->
+  <div class="noaccess" id="noaccess" hidden>
+    <div class="gate-label">Area riservata</div>
+    <p class="hint">Accedi dalla <a href="/">pagina iniziale</a>.</p>
+  </div>
 
-    <!-- Contenuto decifrato -->
-    <div id="content" hidden></div>
-  </main>
+  <!-- Visualizzatore (popolato dopo decifratura) -->
+  <div id="viewer" hidden>
+    <header class="head">
+      <span class="head-title">Logofarma — Controllo di gestione</span>
+      <span class="head-meta">AS-IS 2026 · Vol. 01</span>
+    </header>
+    <main class="deck" id="deck"></main>
+    <p class="status" id="status">Decifratura in corso…</p>
+    <p class="deck-foot" id="foot" hidden>Documento interno · Achille Cipriani · Giugno 2026</p>
+  </div>
 
 <script>
   /*
-    CONTENUTO CIFRATO (AES-GCM)
-    ───────────────────────────
-    Il contenuto non compare in chiaro nel sorgente. La chiave (token) NON è
-    qui: arriva solo dal login sulla pagina iniziale, che reindirizza con
-    #k=<token> nel frammento. Il token viene salvato in sessionStorage e il
-    frammento ripulito dall'URL. Chi apre /Logofarma direttamente non ha il
-    token e non vede alcun contenuto.
-    Per aggiornare il contenuto: rigenerare DATA con lo stesso token e
-    rigenerare la voce cifrata della home.
+    PRESENTAZIONE CIFRATA (AES-GCM)
+    ───────────────────────────────
+    Le 7 slide sono file .enc cifrati (PBKDF2 250k + AES-GCM, salt condiviso).
+    La chiave (token) arriva solo dal login sulla pagina iniziale (#k=...),
+    salvato in sessionStorage e ripulito dall'URL. Senza token non si decifra
+    nulla: le immagini non sono accessibili in chiaro.
   */
   (function () {
-    var DATA = {
-      salt: "KX7yF933da1mtbYh8AH4Gw==",
-      iv: "6yG2N1zx+6qaCZyo",
-      ct: "/b0YYIrUIidFlMqiduRpl918xL85Et688o+dyjFZE+mXAnR/63AgjsToNEKFKbpkOmtsJ6zTZRT71DbTldsZQTxK6zhRC4yyZl+5OQZdKKZ49HnLfkRZedBiG1rLPA==",
-      iterations: 250000
-    };
+    var SALT = "kc0vjpQG0Lu7U7lDM5ao+w==";
+    var ITER = 250000;
+    var COUNT = 7;
     var SS_KEY = "lf_token";
+    var ALTS = [
+      "Slide 1 — Situazione attuale: analisi dei processi amministrativi",
+      "Slide 2 — Attori & ruoli: chi fa cosa (cinque ruoli)",
+      "Slide 3 — Sistemi & strumenti: la struttura (cinque strumenti)",
+      "Slide 4 — Sei aree analizzate (I/II): contabilità, marketing–COGE, tesoreria",
+      "Slide 5 — Sei aree analizzate (II/II): payroll, magazzino & ordini, IT",
+      "Slide 6 — Criticità rilevate: cinque criticità",
+      "Slide 7 — Raccomandazioni e azioni: otto punti"
+    ];
 
     var noaccess = document.getElementById("noaccess");
-    var content = document.getElementById("content");
+    var viewer = document.getElementById("viewer");
+    var deck = document.getElementById("deck");
+    var status = document.getElementById("status");
+    var foot = document.getElementById("foot");
 
-    function showNoAccess() { noaccess.hidden = false; }
-
+    function showNoAccess() { viewer.hidden = true; noaccess.hidden = false; }
     function b64d(s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); }
 
     function readToken() {
-      // 1) dal frammento dell'URL (#k=...) lasciato dal redirect della home
       var h = location.hash || "";
       var m = h.match(/[#&]k=([^&]+)/);
       if (m) {
         var tok = decodeURIComponent(m[1]);
         try { sessionStorage.setItem(SS_KEY, tok); } catch (e) {}
-        // ripulisce il frammento dall'URL (senza ricaricare)
         try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
         return tok;
       }
-      // 2) già sbloccato in questa sessione (es. refresh)
       try { return sessionStorage.getItem(SS_KEY); } catch (e) { return null; }
     }
 
-    async function decrypt(token) {
+    async function deriveKey(token) {
       var enc = new TextEncoder();
       var km = await crypto.subtle.importKey("raw", enc.encode(token), "PBKDF2", false, ["deriveKey"]);
-      var key = await crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt: b64d(DATA.salt), iterations: DATA.iterations, hash: "SHA-256" },
+      return crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: b64d(SALT), iterations: ITER, hash: "SHA-256" },
         km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
       );
-      var pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64d(DATA.iv) }, key, b64d(DATA.ct));
-      return new TextDecoder().decode(pt);
+    }
+
+    async function decryptSlide(key, i) {
+      var res = await fetch("slides/slide-" + i + ".enc", { cache: "no-store" });
+      if (!res.ok) throw new Error("fetch " + i);
+      var buf = new Uint8Array(await res.arrayBuffer());
+      var iv = buf.slice(0, 12);
+      var ct = buf.slice(12);
+      var pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, ct);
+      return URL.createObjectURL(new Blob([pt], { type: "image/png" }));
     }
 
     (async function () {
       var token = readToken();
       if (!token || !window.crypto || !window.crypto.subtle) { showNoAccess(); return; }
+
+      viewer.hidden = false; // mostra header + stato di caricamento durante la decifratura
+
+      var key;
+      try { key = await deriveKey(token); } catch (_) { showNoAccess(); return; }
+
+      // Predispone i contenitori in ordine
+      var imgs = [];
+      for (var i = 1; i <= COUNT; i++) {
+        var fig = document.createElement("div");
+        fig.className = "slide";
+        var img = document.createElement("img");
+        img.alt = ALTS[i - 1] || ("Slide " + i);
+        img.loading = i <= 2 ? "eager" : "lazy";
+        fig.appendChild(img);
+        deck.appendChild(fig);
+        imgs.push(img);
+      }
+
+      // Valida il token con la prima slide
       try {
-        var html = await decrypt(token);
-        content.innerHTML = html;
-        content.hidden = false;
+        imgs[0].src = await decryptSlide(key, 1);
       } catch (_) {
         try { sessionStorage.removeItem(SS_KEY); } catch (e) {}
+        deck.innerHTML = "";
         showNoAccess();
+        return;
+      }
+
+      status.hidden = true;
+      foot.hidden = false;
+
+      // Carica le restanti in parallelo, mantenendo l'ordine
+      for (var j = 2; j <= COUNT; j++) {
+        (function (n) {
+          decryptSlide(key, n).then(function (url) { imgs[n - 1].src = url; })
+            .catch(function () { imgs[n - 1].closest(".slide").remove(); });
+        })(j);
       }
     })();
   })();
