@@ -51,6 +51,18 @@
   .head-title { display: inline-flex; align-items: center; gap: 9px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink); font-weight: 600; }
   .head-title::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
   .head-meta { font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .head-right { display: inline-flex; align-items: center; gap: clamp(10px, 3vw, 22px); }
+  .head-dl {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--accent); color: var(--cream); border: none; border-radius: 6px;
+    font-family: inherit; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600;
+    padding: 8px 13px; cursor: pointer; transition: background 0.25s ease;
+  }
+  .head-dl:hover { background: #16555b; }
+  .head-dl:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .head-dl[disabled] { opacity: 0.6; cursor: default; }
+  .head-dl svg { display: block; }
+  @media (max-width: 620px) { .head-meta { display: none; } .head-title { font-size: 10px; letter-spacing: 0.1em; } }
 
   .deck {
     max-width: 1080px; margin: 0 auto;
@@ -87,7 +99,13 @@
   <div id="viewer" hidden>
     <header class="head">
       <span class="head-title">Logofarma — Controllo di gestione</span>
-      <span class="head-meta">AS-IS 2026 · Vol. 01</span>
+      <span class="head-right">
+        <span class="head-meta">AS-IS 2026 · Vol. 01</span>
+        <button type="button" class="head-dl" id="dl" hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span class="head-dl-label">Scarica PDF</span>
+        </button>
+      </span>
     </header>
     <main class="deck" id="deck"></main>
     <p class="status" id="status">Decifratura in corso…</p>
@@ -123,6 +141,7 @@
     var deck = document.getElementById("deck");
     var status = document.getElementById("status");
     var foot = document.getElementById("foot");
+    var dl = document.getElementById("dl");
 
     function showNoAccess() { viewer.hidden = true; noaccess.hidden = false; }
     function b64d(s) { return Uint8Array.from(atob(s), function (c) { return c.charCodeAt(0); }); }
@@ -192,6 +211,30 @@
 
       status.hidden = true;
       foot.hidden = false;
+
+      // Download del PDF: decifrato col token già disponibile (mai in chiaro sul server)
+      dl.hidden = false;
+      dl.addEventListener("click", async function () {
+        if (dl.disabled) return;
+        dl.disabled = true;
+        var label = dl.querySelector(".head-dl-label");
+        var prev = label ? label.textContent : "";
+        if (label) label.textContent = "Preparazione…";
+        try {
+          var res = await fetch("files/presentazione.enc", { cache: "no-store" });
+          if (!res.ok) throw new Error("fetch pdf");
+          var buf = new Uint8Array(await res.arrayBuffer());
+          var pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: buf.slice(0, 12) }, key, buf.slice(12));
+          var url = URL.createObjectURL(new Blob([pt], { type: "application/pdf" }));
+          var a = document.createElement("a");
+          a.href = url;
+          a.download = "Logofarma 2026 - controllo di gestione.pdf";
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+        } catch (e) { /* download non riuscito */ }
+        if (label) label.textContent = prev;
+        dl.disabled = false;
+      });
 
       // Carica le restanti in parallelo, mantenendo l'ordine
       for (var j = 2; j <= COUNT; j++) {
