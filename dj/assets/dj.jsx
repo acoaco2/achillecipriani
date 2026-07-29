@@ -1,3 +1,10 @@
+// Link diretto al progetto Supabase, ricavato dall'URL in config.js: se il
+// progetto cambia, il link segue da solo.
+const dashboardUrl = (() => {
+  const m = (window.DJ_CONFIG && window.DJ_CONFIG.SUPABASE_URL || "").match(/^https:\/\/([a-z0-9]+)\.supabase\.co/);
+  return m ? "https://supabase.com/dashboard/project/" + m[1] : "https://supabase.com/dashboard";
+})();
+
 function MonitorPage({ store, navigate }) {
   const [now, setNow] = React.useState(Date.now());
   const [actionError, setActionError] = React.useState(null);
@@ -95,6 +102,25 @@ function MonitorPage({ store, navigate }) {
           </div>
         </div>
       </div>
+
+      {store.cloud && store.online === false && (
+        <div role="alert" style={{
+          marginBottom: 24, padding: "14px 16px", borderRadius: 8,
+          border: "1px solid var(--orange)", background: "rgba(232,147,42,0.08)",
+        }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--orange)", marginBottom: 6, letterSpacing: "0.05em" }}>
+            ⚠ Le richieste dai telefoni non stanno arrivando
+          </div>
+          <div style={{ fontSize: 13, color: "var(--cream-2)", lineHeight: 1.5 }}>
+            Di solito il progetto Supabase e' andato in pausa per inattivita'.{" "}
+            <a href={dashboardUrl} target="_blank" rel="noopener noreferrer"
+               style={{ color: "var(--orange)", textDecoration: "underline" }}>
+              Aprilo dalla dashboard
+            </a>{" "}
+            per svegliarlo: si riattiva in un minuto e questo avviso sparisce da solo.
+          </div>
+        </div>
+      )}
 
       {needPin && <PinUnlock onDone={() => setNeedPin(false)}/>}
 
@@ -224,6 +250,61 @@ function MonitorPage({ store, navigate }) {
             ))}
           </div>
         </div>
+      )}
+
+      <PreflightMemo/>
+    </div>
+  );
+}
+
+// Promemoria operativo: vive solo qui, dietro PIN, perche' /dj e' pubblico e
+// gli ospiti non devono leggere note di servizio.
+function PreflightMemo() {
+  const [open, setOpen] = React.useState(true);
+
+  const item = (n, children) => (
+    <li style={{ display: "flex", gap: 12, marginBottom: 10, lineHeight: 1.5 }}>
+      <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--orange)", flexShrink: 0 }}>{n}</span>
+      <span style={{ fontSize: 13, color: "var(--cream-2)" }}>{children}</span>
+    </li>
+  );
+
+  return (
+    <div style={{ marginTop: 56, borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 20 }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+        style={{
+          background: "transparent", border: "none", padding: 0, cursor: "pointer",
+          fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em",
+          color: "rgba(255,255,255,0.3)",
+        }}
+        onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.6)"}
+        onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}
+      >
+        {open ? "−" : "+"} PRIMA DELLA SERATA
+      </button>
+
+      {open && (
+        <ol style={{ listStyle: "none", padding: 0, margin: "16px 0 0", maxWidth: 620 }}>
+          {item("01", <>
+            <strong style={{ color: "var(--cream)", fontWeight: 600 }}>Sveglia il database qualche ora prima.</strong>{" "}
+            Supabase mette in pausa i progetti gratuiti dopo circa una settimana senza traffico.{" "}
+            <a href={dashboardUrl} target="_blank" rel="noopener noreferrer"
+               style={{ color: "var(--orange)", textDecoration: "underline" }}>
+              Apri la dashboard
+            </a>{" "}
+            e basta: si risveglia da solo.
+          </>)}
+          {item("02", <>
+            <strong style={{ color: "var(--cream)", fontWeight: 600 }}>Controlla che qui sopra ci sia "● live".</strong>{" "}
+            Se leggi "offline" o "solo questo dispositivo", le richieste dei telefoni non arrivano.
+          </>)}
+          {item("03", <>
+            <strong style={{ color: "var(--cream)", fontWeight: 600 }}>Prova dal tuo telefono in rete dati</strong>{" "}
+            (wifi spento): fai una richiesta e guarda se compare qui. Poi cancellala con RESET.
+          </>)}
+        </ol>
       )}
     </div>
   );
