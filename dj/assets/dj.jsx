@@ -1,12 +1,20 @@
 function MonitorPage({ store, navigate }) {
   const [now, setNow] = React.useState(Date.now());
-  const [countdown, setCountdown] = React.useState(10);
+  const [actionError, setActionError] = React.useState(null);
+  // Arrivando qui da segnalibro (#monitor) il PIN non e' in sessione: la
+  // classifica si vede lo stesso, ma per agire serve sbloccare.
+  const [needPin, setNeedPin] = React.useState(() => store.cloud && !getDjPin());
 
   React.useEffect(() => {
-    const refresh = setInterval(() => { setNow(Date.now()); setCountdown(10); }, 10000);
-    const tick   = setInterval(() => setCountdown(c => Math.max(0, c - 1)), 1000);
-    return () => { clearInterval(refresh); clearInterval(tick); };
+    const clock = setInterval(() => setNow(Date.now()), 10000);
+    return () => clearInterval(clock);
   }, []);
+
+  // Le azioni del dj passano dal server e possono fallire (rete, PIN scaduto).
+  const run = async (fn) => {
+    try { await fn(); setActionError(null); }
+    catch (e) { setActionError(e.message || "operazione non riuscita"); }
+  };
 
   const todayStr = new Date(now).toDateString();
   const todayAll = store.requests.filter(r => new Date(r.ts).toDateString() === todayStr);
@@ -61,7 +69,7 @@ function MonitorPage({ store, navigate }) {
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
           <div style={{ textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--cream-2)", lineHeight: 1.8 }}>
             <div>{new Date(now).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}</div>
-            <div style={{ opacity: 0.4, fontSize: 10 }}>refresh in {countdown}s</div>
+            <ConnectionStatus store={store}/>
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             <button
@@ -87,6 +95,18 @@ function MonitorPage({ store, navigate }) {
           </div>
         </div>
       </div>
+
+      {needPin && <PinUnlock onDone={() => setNeedPin(false)}/>}
+
+      {actionError && (
+        <div role="alert" style={{
+          marginBottom: 24, padding: "10px 14px", borderRadius: 8,
+          border: "1px solid var(--orange)", color: "var(--orange)",
+          fontFamily: "var(--font-mono)", fontSize: 12,
+        }}>
+          {actionError}
+        </div>
+      )}
 
       {/* Top 5 */}
       {top.length === 0 ? (
@@ -120,7 +140,7 @@ function MonitorPage({ store, navigate }) {
                   {r.votes}
                 </div>
                 <button
-                  onClick={() => store.update(r.id, { status: "played" })}
+                  onClick={() => run(() => store.update(r.id, { status: "played" }))}
                   title="Segna come suonata"
                   style={{
                     width: 40, height: 40, borderRadius: "50%",
@@ -152,14 +172,14 @@ function MonitorPage({ store, navigate }) {
             </div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
               <button
-                onClick={() => { exportCsv(); store.removeMany(top.map(r => r.id)); setConfirmReset(false); }}
+                onClick={() => { exportCsv(); run(() => store.removeMany(top.map(r => r.id))); setConfirmReset(false); }}
                 style={{
                   background: "var(--orange)", border: "none", borderRadius: 8,
                   padding: "8px 22px", fontFamily: "var(--font-mono)", fontSize: 11,
                   letterSpacing: "0.1em", color: "var(--ink)", cursor: "pointer",
                 }}>SÌ</button>
               <button
-                onClick={() => { store.removeMany(top.map(r => r.id)); setConfirmReset(false); }}
+                onClick={() => { run(() => store.removeMany(top.map(r => r.id))); setConfirmReset(false); }}
                 style={{
                   background: "transparent", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 8,
                   padding: "8px 22px", fontFamily: "var(--font-mono)", fontSize: 11,
@@ -178,7 +198,7 @@ function MonitorPage({ store, navigate }) {
               SUONATE
             </div>
             <button
-              onClick={() => store.removeMany(played.map(r => r.id))}
+              onClick={() => run(() => store.removeMany(played.map(r => r.id)))}
               style={{
                 background: "transparent", border: "1px solid rgba(255,255,255,0.15)",
                 color: "rgba(255,255,255,0.3)", borderRadius: 6, padding: "3px 8px",
@@ -207,6 +227,73 @@ function MonitorPage({ store, navigate }) {
       )}
     </div>
   );
+}
+
+// Sblocco delle azioni riservate quando si arriva al monitor senza passare
+// dalla password della home. La lettura della classifica resta libera.
+function PinUnlock({ onDone }) {
+  const [pin, setPin] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+  const [wrong, setWrong] = React.useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    const ok = await verifyDjPin(pin);
+    setBusy(false);
+    if (ok) { setDjPin(pin); onDone(); }
+    else { setWrong(true); setPin(""); }
+  };
+
+  return (
+    <form onSubmit={submit} style={{
+      marginBottom: 24, padding: "12px 14px", borderRadius: 8,
+      border: "1px dashed rgba(255,255,255,0.25)",
+      display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+    }}>
+      <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--cream-2)" }}>
+        {wrong ? "PIN errato, riprova" : "PIN dj per gestire la classifica"}
+      </span>
+      <input
+        type="password"
+        value={pin}
+        onChange={e => { setPin(e.target.value); setWrong(false); }}
+        placeholder="PIN"
+        style={{
+          background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)",
+          color: "var(--cream)", borderRadius: 6, padding: "6px 10px",
+          fontFamily: "var(--font-mono)", fontSize: 12, width: 120,
+        }}
+      />
+      <button type="submit" disabled={busy} style={{
+        background: "var(--orange)", border: "none", borderRadius: 6,
+        padding: "6px 14px", cursor: "pointer", fontFamily: "var(--font-mono)",
+        fontSize: 11, color: "var(--ink)", letterSpacing: "0.1em", opacity: busy ? 0.6 : 1,
+      }}>{busy ? "…" : "SBLOCCA"}</button>
+    </form>
+  );
+}
+
+// Stato della connessione: il dj deve capire a colpo d'occhio se sta vedendo
+// le richieste di tutti o solo quelle fatte da questo dispositivo.
+function ConnectionStatus({ store }) {
+  let color = "rgba(255,255,255,0.35)";
+  let text;
+
+  if (!store.cloud) {
+    color = "var(--orange)";
+    text = "⚠ solo questo dispositivo";
+  } else if (store.online === null) {
+    text = "connessione…";
+  } else if (store.online) {
+    text = "● live · tutti i telefoni";
+  } else {
+    color = "var(--orange)";
+    text = "⚠ offline · dati non aggiornati";
+  }
+
+  return <div style={{ fontSize: 10, color, letterSpacing: "0.05em" }}>{text}</div>;
 }
 
 window.MonitorPage = MonitorPage;

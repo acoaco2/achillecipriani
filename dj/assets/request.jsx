@@ -6,6 +6,8 @@ function RequestPage({ navigate, store }) {
   const [selected, setSelected] = React.useState(null);
   const [name, setName] = React.useState("");
   const [submitted, setSubmitted] = React.useState(null);
+  const [sending, setSending] = React.useState(false);
+  const [sendError, setSendError] = React.useState(null);
   const inputRef = React.useRef(null);
 
   const playedKeys = React.useMemo(() => {
@@ -48,33 +50,22 @@ function RequestPage({ navigate, store }) {
     </div>
   );
 
-  const handleSubmit = () => {
-    if (!selected) return;
-    const todayStr = new Date().toDateString();
-    const existing = store.requests.find(r =>
-      r.title.toLowerCase() === selected.title.toLowerCase() &&
-      r.artist.toLowerCase() === selected.artist.toLowerCase() &&
-      new Date(r.ts).toDateString() === todayStr &&
-      r.status !== "played"
-    );
-    if (existing) {
-      store.update(existing.id, {
-        votes: existing.votes + 1,
-        voteLog: [...(existing.voteLog || []), { ts: Date.now(), requester: name.trim() || "Anon" }],
-      });
-    } else {
-      store.add({
-        title: selected.title,
-        artist: selected.artist,
-        album: selected.album,
-        color: selected.color,
-        requester: name.trim() || "Anon",
-      });
+  const handleSubmit = async () => {
+    if (!selected || sending) return;
+    const who = name.trim() || "Anon";
+    setSending(true);
+    setSendError(null);
+    try {
+      await store.request(selected, who);
+      setSubmitted({ title: selected.title, artist: selected.artist, requester: who });
+      setSelected(null);
+      setQuery("");
+      setName("");
+    } catch (e) {
+      setSendError("Richiesta non inviata, riprova. Se non funziona avvisa Aco.");
+    } finally {
+      setSending(false);
     }
-    setSubmitted({ title: selected.title, artist: selected.artist, requester: name.trim() || "Anon" });
-    setSelected(null);
-    setQuery("");
-    setName("");
   };
 
   if (submitted) {
@@ -229,10 +220,16 @@ function RequestPage({ navigate, store }) {
             maxLength={24}
           />
           <div style={{ marginTop: 16 }}>
-            <button className="btn accent" onClick={handleSubmit}>
-              Send to the booth →
+            <button className="btn accent" onClick={handleSubmit} disabled={sending}
+              style={{ opacity: sending ? 0.6 : 1 }}>
+              {sending ? "Invio…" : "Send to the booth →"}
             </button>
           </div>
+          {sendError && (
+            <p role="alert" style={{ fontSize: 12, color: "var(--orange-deep)", textAlign: "center", marginTop: 10, lineHeight: 1.4 }}>
+              {sendError}
+            </p>
+          )}
           <p style={{ fontSize: 11, color: "var(--mute)", textAlign: "center", marginTop: 12, fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
             the dj decides what gets played
           </p>

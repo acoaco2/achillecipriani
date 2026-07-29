@@ -13,19 +13,74 @@ function useHashRoute() {
   return [route, (r) => { window.location.hash = r; }];
 }
 
-// ---------- Shared request store (localStorage, cross-tab via storage event) ----------
+// ---------- Request store ----------
+// Modalita' "cloud": tabella condivisa su Supabase, cosi' le richieste fatte dai
+// telefoni degli ospiti arrivano al monitor del dj. Aggiornamento in realtime,
+// con un refresh periodico di sicurezza se la connessione balla.
+// Modalita' "local": se Supabase non e' configurato o non e' raggiungibile si
+// ricade su localStorage (come prima: classifica valida solo su quel device).
+
 const STORAGE_KEY = "dj_aco_requests_v1";
+const PIN_KEY = "dj_aco_pin";
+const DAY_MS = 86400000;
+
+const SB = (() => {
+  const cfg = window.DJ_CONFIG || {};
+  if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return null;
+  if (!window.supabase || !window.supabase.createClient) return null;
+  try {
+    return window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  } catch (e) {
+    return null;
+  }
+})();
+
+const rowToReq = (r) => ({
+  id: r.id,
+  title: r.title,
+  artist: r.artist,
+  album: r.album,
+  color: r.color,
+  requester: r.requester,
+  votes: r.votes,
+  status: r.status,
+  ts: Number(r.ts),
+  voteLog: Array.isArray(r.vote_log) ? r.vote_log : [],
+});
+
+const getPin = () => { try { return sessionStorage.getItem(PIN_KEY) || ""; } catch (e) { return ""; } };
+const setPin = (pin) => { try { sessionStorage.setItem(PIN_KEY, pin); } catch (e) {} };
+
+// Verifica il PIN del dj sul server; se il cloud non c'e', ricade sul valore locale.
+async function verifyDjPin(pin) {
+  if (!SB) return pin === "aco";
+  try {
+    const { data, error } = await SB.rpc("dj_check", { p_pin: pin });
+    if (error) return pin === "aco";
+    return data === true;
+  } catch (e) {
+    return pin === "aco";
+  }
+}
 
 function useRequestStore() {
-  const [requests, setRequests] = useState(() => {
+  const readLocal = () => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) return JSON.parse(raw);
     } catch (e) {}
     return [];
-  });
+  };
 
+  const [requests, setRequests] = useState(() => (SB ? [] : readLocal()));
+  // null = in connessione, true = cloud attivo, false = solo questo dispositivo
+  const [online, setOnline] = useState(SB ? null : false);
+
+  // ---- modalita' locale: sincronizzazione tra schede dello stesso browser ----
   useEffect(() => {
+    if (SB) return;
     const onStorage = (e) => {
       if (e.key === STORAGE_KEY && e.newValue) {
         try { setRequests(JSON.parse(e.newValue)); } catch (e) {}
@@ -35,29 +90,117 @@ function useRequestStore() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  const save = (next) => {
+  const saveLocal = (next) => {
     setRequests(next);
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch (e) {}
   };
 
-  const add = (req) => {
-    const now = Date.now();
-    const next = [
-      { ...req, id: now + "-" + Math.random().toString(36).slice(2, 6), votes: 1, status: "queued", ts: now,
-        voteLog: [{ ts: now, requester: req.requester }] },
-      ...requests
-    ];
-    save(next);
+  // ---- modalita' cloud ----
+  const refresh = React.useCallback(async () => {
+    if (!SB) return;
+    try {
+      const { data, error } = await SB
+        .from("requests")
+        .select("*")
+        .gte("ts", Date.now() - DAY_MS)
+        .order("ts", { ascending: false });
+      if (error) { setOnline(false); return; }
+      setRequests(data.map(rowToReq));
+      setOnline(true);
+    } catch (e) {
+      setOnline(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!SB) return;
+    let alive = true;
+    const tick = () => { if (alive) refresh(); };
+
+    tick();
+
+    // Realtime: a ogni inserimento/voto/cancellazione ricarichiamo la lista.
+    // Ricaricare invece di applicare la patch tiene il codice semplice e non
+    // lascia stati divergenti se un evento si perde.
+    const channel = SB
+      .channel("requests-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "requests" }, tick)
+      .subscribe();
+
+    // Rete da locale: se il realtime cade, questi due lo coprono.
+    const poll = setInterval(tick, 15000);
+    const onVisible = () => { if (document.visibilityState === "visible") tick(); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", tick);
+
+    return () => {
+      alive = false;
+      clearInterval(poll);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", tick);
+      SB.removeChannel(channel);
+    };
+  }, [refresh]);
+
+  // Richiesta o voto: una sola operazione atomica lato server, cosi' due
+  // telefoni che votano insieme non si annullano a vicenda.
+  const request = async (track, requester) => {
+    const who = (requester || "").trim() || "Anon";
+
+    if (!SB) {
+      const now = Date.now();
+      const todayStr = new Date().toDateString();
+      const existing = requests.find(r =>
+        r.title.toLowerCase() === track.title.toLowerCase() &&
+        r.artist.toLowerCase() === track.artist.toLowerCase() &&
+        new Date(r.ts).toDateString() === todayStr &&
+        r.status !== "played"
+      );
+      if (existing) {
+        saveLocal(requests.map(r => r.id === existing.id
+          ? { ...r, votes: r.votes + 1, voteLog: [...(r.voteLog || []), { ts: now, requester: who }] }
+          : r));
+      } else {
+        saveLocal([
+          { title: track.title, artist: track.artist, album: track.album, color: track.color,
+            requester: who, id: now + "-" + Math.random().toString(36).slice(2, 6),
+            votes: 1, status: "queued", ts: now, voteLog: [{ ts: now, requester: who }] },
+          ...requests,
+        ]);
+      }
+      return;
+    }
+
+    const { error } = await SB.rpc("request_track", {
+      p_title: track.title,
+      p_artist: track.artist,
+      p_album: track.album || "",
+      p_color: track.color || null,
+      p_requester: who,
+    });
+    if (error) throw new Error(error.message);
+    await refresh();
   };
 
-  const update = (id, patch) => {
-    save(requests.map(r => r.id === id ? { ...r, ...patch } : r));
+  const update = async (id, patch) => {
+    if (!SB) { saveLocal(requests.map(r => r.id === id ? { ...r, ...patch } : r)); return; }
+    if (!("status" in patch)) return;
+    const { error } = await SB.rpc("dj_set_status", { p_pin: getPin(), p_id: id, p_status: patch.status });
+    if (error) throw new Error(error.message);
+    await refresh();
   };
 
-  const remove = (id) => save(requests.filter(r => r.id !== id));
-  const removeMany = (ids) => save(requests.filter(r => !ids.includes(r.id)));
+  const removeMany = async (ids) => {
+    if (!ids || ids.length === 0) return;
+    if (!SB) { saveLocal(requests.filter(r => !ids.includes(r.id))); return; }
+    const { error } = await SB.rpc("dj_delete", { p_pin: getPin(), p_ids: ids });
+    if (error) throw new Error(error.message);
+    await refresh();
+  };
 
-  return { requests, add, update, remove, removeMany };
+  const remove = (id) => removeMany([id]);
+
+  return { requests, request, update, remove, removeMany, refresh, online, cloud: !!SB };
 }
 
 
@@ -215,4 +358,5 @@ function TopBar({ route, navigate }) {
 // Export to window for other files
 Object.assign(window, {
   useHashRoute, useRequestStore, useCatalog, AlbumArt, Vinyl, QRCode, TopBar,
+  verifyDjPin, setDjPin: setPin, getDjPin: getPin,
 });

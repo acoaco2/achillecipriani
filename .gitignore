@@ -1,0 +1,10 @@
+# Documentazione interna, solo locale (non pubblicare)
+LOGOFARMA.md
+RIEPILOGO.md
+DJ-SETUP.md
+
+# Sorgenti riservati della presentazione + slide in chiaro: NON pubblicare.
+# Vengono pubblicate solo le slide cifrate (.enc).
+Logofarma/*.pdf
+Logofarma/*.pptx
+Logofarma/slides/*.png

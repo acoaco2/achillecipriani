@@ -7,11 +7,27 @@ function HomePage({ navigate, djName, bio }) {
   const [pwOpen, setPwOpen] = React.useState(false);
   const [pw, setPw] = React.useState("");
   const [shake, setShake] = React.useState(false);
+  const [checking, setChecking] = React.useState(false);
 
-  const handlePw = (e) => {
+  // Il PIN viene verificato dal server (dj_check) e tenuto in sessionStorage:
+  // serve anche per le operazioni riservate del monitor (segna come suonata,
+  // cancella). Senza rete si ricade sul controllo locale.
+  const handlePw = async (e) => {
     e.preventDefault();
-    if (pw === "aco") { navigate("monitor"); setPwOpen(false); setPw(""); }
-    else { setShake(true); setPw(""); setTimeout(() => setShake(false), 500); }
+    if (checking) return;
+    setChecking(true);
+    const ok = await verifyDjPin(pw);
+    setChecking(false);
+    if (ok) {
+      setDjPin(pw);
+      navigate("monitor");
+      setPwOpen(false);
+      setPw("");
+    } else {
+      setShake(true);
+      setPw("");
+      setTimeout(() => setShake(false), 500);
+    }
   };
 
   return (
@@ -210,11 +226,12 @@ function HomePage({ navigate, djName, bio }) {
                   fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.1em",
                 }}
               />
-              <button type="submit" style={{
+              <button type="submit" disabled={checking} style={{
                 background: "var(--orange)", border: "none", borderRadius: 8,
                 padding: "8px 14px", cursor: "pointer", fontFamily: "var(--font-mono)",
                 fontSize: 11, color: "var(--ink)", letterSpacing: "0.1em",
-              }}>→</button>
+                opacity: checking ? 0.6 : 1,
+              }}>{checking ? "…" : "→"}</button>
             </div>
           </form>
         )}
