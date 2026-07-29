@@ -235,6 +235,36 @@ input::placeholder { color: var(--mute); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Stato della connessione nel monitor: deve saltare all'occhio, e' il segnale
+   che dice al dj se le richieste dei telefoni stanno arrivando davvero. */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.status-pill .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.status-pill .dot.live { animation: statusPulse 2.4s ease-in-out infinite; }
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .status-pill .dot.live { animation: none; }
+}
+
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   20%       { transform: translateX(-6px); }

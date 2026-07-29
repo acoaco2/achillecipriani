@@ -112,7 +112,7 @@ function MonitorPage({ store, navigate }) {
             ⚠ Le richieste dai telefoni non stanno arrivando
           </div>
           <div style={{ fontSize: 13, color: "var(--cream-2)", lineHeight: 1.5 }}>
-            Di solito il progetto Supabase e' andato in pausa per inattivita'.{" "}
+            Di solito il progetto Supabase è andato in pausa per inattività.{" "}
             <a href={dashboardUrl} target="_blank" rel="noopener noreferrer"
                style={{ color: "var(--orange)", textDecoration: "underline" }}>
               Aprilo dalla dashboard
@@ -297,12 +297,11 @@ function PreflightMemo() {
             e basta: si risveglia da solo.
           </>)}
           {item("02", <>
-            <strong style={{ color: "var(--cream)", fontWeight: 600 }}>Controlla che qui sopra ci sia "● live".</strong>{" "}
-            Se leggi "offline" o "solo questo dispositivo", le richieste dei telefoni non arrivano.
-          </>)}
-          {item("03", <>
-            <strong style={{ color: "var(--cream)", fontWeight: 600 }}>Prova dal tuo telefono in rete dati</strong>{" "}
-            (wifi spento): fai una richiesta e guarda se compare qui. Poi cancellala con RESET.
+            <strong style={{ color: "var(--cream)", fontWeight: 600 }}>Guarda la pastiglia in alto a destra, accanto all'orario.</strong>{" "}
+            Se è arancione e dice <span className="status-pill" style={{ color: "var(--orange)", fontSize: 10, padding: "2px 8px", verticalAlign: "middle" }}>
+              <span className="dot live"/>LIVE
+            </span>{" "}
+            le richieste dai telefoni stanno arrivando. Se è rossa (OFFLINE o SOLO QUESTO PC), no.
           </>)}
         </ol>
       )}
@@ -359,22 +358,31 @@ function PinUnlock({ onDone }) {
 // Stato della connessione: il dj deve capire a colpo d'occhio se sta vedendo
 // le richieste di tutti o solo quelle fatte da questo dispositivo.
 function ConnectionStatus({ store }) {
-  let color = "rgba(255,255,255,0.35)";
-  let text;
+  let color = "rgba(255,255,255,0.45)";
+  let text = "connessione…";
+  let live = false;
 
   if (!store.cloud) {
+    color = "#FF7A63";
+    text = "SOLO QUESTO PC";
+  } else if (store.online === true) {
     color = "var(--orange)";
-    text = "⚠ solo questo dispositivo";
-  } else if (store.online === null) {
-    text = "connessione…";
-  } else if (store.online) {
-    text = "● live · tutti i telefoni";
-  } else {
-    color = "var(--orange)";
-    text = "⚠ offline · dati non aggiornati";
+    text = "LIVE";
+    live = true;
+  } else if (store.online === false) {
+    color = "#FF7A63";
+    text = "OFFLINE";
   }
 
-  return <div style={{ fontSize: 10, color, letterSpacing: "0.05em" }}>{text}</div>;
+  return (
+    <div className="status-pill" style={{ color }} title={
+      live ? "Le richieste dai telefoni stanno arrivando"
+           : "Le richieste dai telefoni NON stanno arrivando"
+    }>
+      <span className={"dot" + (live ? " live" : "")}/>
+      {text}
+    </div>
+  );
 }
 
 window.MonitorPage = MonitorPage;
