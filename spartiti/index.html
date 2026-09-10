@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Spartiti per pianoforte con diteggiatura per principianti: brani di pubblico dominio, da leggere e da stampare.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+<link rel="apple-touch-icon" href="../favicon-180.png">
+<title>Spartiti a cinque dita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,700&family=Karla:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#FBFAF7;
+  --surface:#FFFFFF;
+  --ink:#171A1F;
+  --muted:#6B6862;
+  --line:#E2DED5;
+  --line-strong:#CFC9BC;
+  --accent:#9E2B3E;
+  --accent-soft:#F3E4E6;
+  --brass:#A8873F;
+  --sheet:#FFFFFF;
+  --shadow:0 1px 2px rgba(23,26,31,.06), 0 12px 28px -18px rgba(23,26,31,.45);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#14161B;
+    --surface:#1B1E24;
+    --ink:#E9E6E0;
+    --muted:#9B968D;
+    --line:#2B2E36;
+    --line-strong:#3A3E48;
+    --accent:#E68193;
+    --accent-soft:#33222A;
+    --brass:#CBA659;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 16px 34px -20px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#14161B;
+  --surface:#1B1E24;
+  --ink:#E9E6E0;
+  --muted:#9B968D;
+  --line:#2B2E36;
+  --line-strong:#3A3E48;
+  --accent:#E68193;
+  --accent-soft:#33222A;
+  --brass:#CBA659;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 16px 34px -20px rgba(0,0,0,.9);
+}
+
+*{box-sizing:border-box}
+img{max-width:100%}
+[hidden]{display:none!important}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Karla","Helvetica Neue",Arial,sans-serif;
+  font-size:15px;
+  line-height:1.55;
+  padding-inline:20px;
+  padding-block:0;
+}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:26px;padding-block:34px 56px}
+
+/* ---------- testata ---------- */
+.masthead{display:flex;flex-direction:column;gap:6px;border-bottom:1px solid var(--line-strong);padding-bottom:18px}
+.eyebrow{
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass);font-weight:700;
+}
+.masthead h1{
+  font-family:"Bodoni Moda",Didot,"Times New Roman",serif;
+  font-weight:700;font-size:clamp(30px,5.4vw,42px);line-height:1.05;margin:0;
+  text-wrap:balance;letter-spacing:-.01em;
+}
+.masthead p{margin:2px 0 0;color:var(--muted);max-width:62ch}
+
+/* ---------- selettore brani ---------- */
+.repertorio{display:flex;flex-direction:column;gap:10px}
+.repertorio h2,.sezione h2{
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;margin:0;
+}
+.brani{display:flex;flex-wrap:wrap;gap:8px}
+.brano{
+  appearance:none;cursor:pointer;text-align:left;
+  background:var(--surface);color:var(--ink);
+  border:1px solid var(--line-strong);border-radius:2px;
+  padding:9px 14px;font-family:inherit;font-size:14px;
+  display:flex;flex-direction:column;gap:1px;
+  transition:border-color .15s,background .15s;
+}
+.brano:hover{border-color:var(--accent)}
+.brano .n{font-weight:700}
+.brano .d{font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+.brano[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.brano[aria-pressed="true"] .d{color:rgba(255,255,255,.8)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- barra strumenti ---------- */
+.toolbar{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  padding-block:12px;
+}
+.tool{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+button.azione{
+  appearance:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;
+  letter-spacing:.02em;padding:8px 15px;border-radius:2px;
+  border:1px solid var(--ink);background:transparent;color:var(--ink);
+  transition:background .15s,color .15s;
+}
+button.azione:hover{background:var(--ink);color:var(--paper)}
+button.azione.primaria{background:var(--accent);border-color:var(--accent);color:#fff}
+button.azione.primaria:hover{filter:brightness(1.08);background:var(--accent);color:#fff}
+input[type=range]{accent-color:var(--accent);width:110px}
+.switch{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;color:var(--ink);font-size:13px}
+.switch input{accent-color:var(--accent);width:15px;height:15px}
+.tempo-val{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:700;min-width:52px}
+
+/* ---------- aiuto stampa ---------- */
+.aiuto{
+  border-left:2px solid var(--accent);
+  background:var(--accent-soft);
+  padding:12px 16px;
+  display:flex;flex-direction:column;gap:6px;
+  font-size:13.5px;
+}
+.aiuto p{margin:0;max-width:62ch}
+.aiuto a{color:var(--accent);font-weight:700}
+.aiuto kbd{
+  font-family:inherit;font-size:12px;font-weight:700;
+  border:1px solid var(--line-strong);border-radius:3px;
+  padding:1px 5px;background:var(--surface);
+}
+
+/* ---------- foglio ---------- */
+.foglio{
+  background:var(--sheet);
+  color:#0E1013;
+  border:1px solid var(--line-strong);
+  border-radius:1px;
+  box-shadow:var(--shadow);
+  padding:26px 20px 20px;
+  overflow-x:auto;
+}
+.foglio svg{max-width:100%;color:#0E1013}
+.foglio svg path{fill:#0E1013}
+.foglio svg text,.foglio svg tspan{fill:#0E1013}
+.foglio svg .abcjs-staff path,.foglio svg .abcjs-bar path{fill:#0E1013}
+.avviso{color:#8a2b2b;font-size:14px;padding:20px;text-align:center}
+.riga-tonalita{
+  display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+  font-size:12px;color:var(--muted);margin-top:4px;flex-wrap:wrap;
+}
+.riga-tonalita strong{color:var(--ink);font-weight:700}
+
+/* ---------- note di studio ---------- */
+.studio{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0}
+.studio .voce{padding:14px 18px;border-left:2px solid var(--line-strong)}
+.studio .voce:first-child{border-left-color:var(--accent)}
+.studio .voce h3{margin:0 0 3px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.studio .voce p{margin:0;font-size:14px}
+
+/* ---------- diagramma tastiera ---------- */
+.sezione{display:flex;flex-direction:column;gap:12px}
+.mani{display:flex;flex-wrap:wrap;gap:22px}
+.mano{flex:1 1 300px;display:flex;flex-direction:column;gap:7px}
+.mano h3{margin:0;font-size:13px;font-weight:700}
+.mano span{font-size:12.5px;color:var(--muted)}
+.legenda{font-size:13px;color:var(--muted);max-width:64ch;margin:0}
+.legenda b{color:var(--ink)}
+
+footer{border-top:1px solid var(--line);padding-top:14px;font-size:12px;color:var(--muted);
+  display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:space-between}
+footer a{color:var(--muted)}
+footer a:hover{color:var(--accent)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- stampa ---------- */
+@page{size:A4 portrait;margin:16mm}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  .wrap{max-width:none;gap:16px;padding:0}
+  .toolbar,.repertorio,footer,.no-print{display:none!important}
+  .foglio{border:none;box-shadow:none;padding:0}
+  .masthead{border-bottom:1px solid #999}
+  .masthead h1{font-size:22px}
+  .studio .voce{border-left:2px solid #999}
+  .sezione{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">Pianoforte · posizione fissa · 5 dita</div>
+    <h1>Spartiti a cinque dita</h1>
+    <p>Melodie di pubblico dominio incise in notazione tradizionale, con il numero del dito su ogni nota: dai primi brani a cinque dita fino ai primi pezzi di repertorio.</p>
+  </header>
+
+  <section class="repertorio">
+    <h2>Repertorio</h2>
+    <div class="brani" id="brani" role="group" aria-label="Scegli il brano"></div>
+  </section>
+
+  <div class="toolbar">
+    <button class="azione primaria" id="play" type="button">Ascolta</button>
+    <div class="tool">
+      <label for="tempo">Tempo</label>
+      <input type="range" id="tempo" min="40" max="140" step="2">
+      <span class="tempo-val" id="tempo-val"></span>
+    </div>
+    <label class="switch" for="dita">
+      <input type="checkbox" id="dita" checked>
+      Diteggiatura
+    </label>
+    <button class="azione" id="stampa" type="button">Stampa / PDF</button>
+  </div>
+
+  <div class="aiuto no-print" id="aiuto-stampa" hidden>
+    <p><strong>La finestra di stampa non si apre da qui.</strong> Questa pagina è dentro un riquadro protetto dell'app, che blocca la stampa.</p>
+    <p><a id="link-scheda" href="#" target="_blank" rel="noopener">Apri lo spartito in una scheda del browser</a> e premi <kbd>Ctrl</kbd>+<kbd>P</kbd>, poi scegli <em>Salva come PDF</em>. Il layout A4 è già pronto: esce solo lo spartito, senza i comandi.</p>
+  </div>
+
+  <section>
+    <div class="foglio" id="foglio"></div>
+    <div class="riga-tonalita">
+      <span id="meta-tonalita"></span>
+      <span class="no-print">I numeri sopra il pentagramma sono la mano destra, quelli sotto la mano sinistra.</span>
+    </div>
+  </section>
+
+  <section class="studio" id="studio"></section>
+
+  <section class="sezione">
+    <h2>Posizione delle mani</h2>
+    <p class="legenda" id="mani-libere" hidden>In questo brano le mani non restano in una posizione fissa: si spostano più volte lungo la tastiera. La diteggiatura scritta sullo spartito è la guida, nota per nota.</p>
+    <div class="mani" id="mani">
+      <div class="mano">
+        <h3 id="tit-sx">Mano sinistra</h3>
+        <span id="sub-sx"></span>
+        <div id="kb-sx"></div>
+      </div>
+      <div class="mano">
+        <h3 id="tit-dx">Mano destra</h3>
+        <span id="sub-dx"></span>
+        <div id="kb-dx"></div>
+      </div>
+    </div>
+    <p class="legenda" id="spostamento" hidden></p>
+    <p class="legenda"><b>1</b> pollice · <b>2</b> indice · <b>3</b> medio · <b>4</b> anulare · <b>5</b> mignolo. La numerazione vale per entrambe le mani e parte sempre dal pollice.</p>
+  </section>
+
+  <footer>
+    <span>Brani di pubblico dominio. Incisione tipografica generata nel browser.</span>
+    <a class="no-print" href="../">achillecipriani.it</a>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/abcjs@6/dist/abcjs-basic-min.js"></script>
+<script src="assets/brani.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var BRANI = window.BRANI || [];
+
+  var elBrani = document.getElementById("brani"),
+      elFoglio = document.getElementById("foglio"),
+      elStudio = document.getElementById("studio"),
+      elMeta = document.getElementById("meta-tonalita"),
+      elTempo = document.getElementById("tempo"),
+      elTempoVal = document.getElementById("tempo-val"),
+      elDita = document.getElementById("dita"),
+      elPlay = document.getElementById("play");
+
+  var attuale = BRANI[0];
+
+  /* ---------- tastiere ---------- */
+  var NOMI = ["Do","Re","Mi","Fa","Sol","La","Si"],
+      PASSI = [2,2,1,2,2,2,1]; // semitoni fino alla bianca successiva
+
+  var POS_DO = {inizio:0, sx:"Do<sub>3</sub> a Sol<sub>3</sub>", dx:"Do<sub>4</sub> a Sol<sub>4</sub>",
+                noteSx:"Mignolo sul Do, pollice sul Sol.", noteDx:"Pollice sul Do centrale, mignolo sul Sol."};
+  var POS_LA = {inizio:5, sx:"La<sub>2</sub> a Mi<sub>3</sub>", dx:"La<sub>4</sub> a Mi<sub>5</sub>",
+                noteSx:"Mignolo sul La, pollice sul Mi.", noteDx:"Pollice sul La sopra il Do centrale."};
+
+  function tastiera(target, numeri, inizio){
+    var w = 30, h = 96, n = 7, pad = 2,
+        svgW = n*w + pad*2, svgH = h + 24, s = "", neri = [];
+    for(var g=0;g<n-1;g++){ if(PASSI[(inizio+g)%7]===2) neri.push(g); }
+    s += '<svg viewBox="0 0 '+svgW+' '+svgH+'" width="100%" style="max-width:'+svgW+'px" role="img" aria-label="Tastiera con la posizione delle dita">';
+    for(var i=0;i<n;i++){
+      var x = pad + i*w, dito = numeri[i], bianchi = [];
+      for(var j=0;j<n;j++) bianchi.push(NOMI[(inizio+j)%7]);
+      s += '<rect x="'+x+'" y="0" width="'+w+'" height="'+h+'" fill="'+(dito?"var(--accent-soft)":"#fff")+'" stroke="var(--line-strong)" stroke-width="1"/>';
+      s += '<text x="'+(x+w/2)+'" y="'+(h+16)+'" text-anchor="middle" font-family="Karla,sans-serif" font-size="11" fill="var(--muted)">'+bianchi[i]+'</text>';
+      if(dito){
+        s += '<circle cx="'+(x+w/2)+'" cy="'+(h-20)+'" r="11" fill="var(--accent)"/>';
+        s += '<text x="'+(x+w/2)+'" y="'+(h-16)+'" text-anchor="middle" font-family="Karla,sans-serif" font-size="13" font-weight="700" fill="#fff">'+dito+'</text>';
+      }
+    }
+    for(var k=0;k<neri.length;k++){
+      var bx = pad + (neri[k]+1)*w - w*0.3;
+      s += '<rect x="'+bx+'" y="0" width="'+(w*0.6)+'" height="'+(h*0.62)+'" fill="#22242A" stroke="#22242A"/>';
+    }
+    s += '</svg>';
+    target.innerHTML = s;
+  }
+
+  /* ---------- incisione ---------- */
+  function disegna(){
+    if(!window.ABCJS){
+      elFoglio.innerHTML = '<p class="avviso">Non riesco a caricare il motore di notazione. Ricarica la pagina: serve la connessione a internet.</p>';
+      return;
+    }
+    var abc = attuale.abc;
+    if(!elDita.checked) abc = abc.replace(/"[\^_][1-5]"/g, "");
+    try{
+      window.ABCJS.renderAbc(elFoglio, abc, {
+        responsive:"resize",
+        foregroundColor:"#0E1013",
+        staffwidth:760,
+        scale:1,
+        paddingtop:6,
+        paddingbottom:6,
+        paddingleft:4,
+        paddingright:4
+      });
+    }catch(e){
+      elFoglio.innerHTML = '<p class="avviso">Errore nel disegnare lo spartito.</p>';
+    }
+  }
+
+  function mostraStudio(){
+    elStudio.innerHTML = attuale.studio.map(function(v){
+      return '<div class="voce"><h3>'+v[0]+'</h3><p>'+v[1]+'</p></div>';
+    }).join("");
+    elMeta.innerHTML = "<strong>"+attuale.nome+"</strong> — "+attuale.tonalita+
+      (attuale.livello ? " · "+attuale.livello : "");
+  }
+
+  function selezionaBrano(id){
+    fermaAudio();
+    attuale = BRANI.filter(function(b){return b.id===id;})[0] || BRANI[0];
+    Array.prototype.forEach.call(elBrani.children, function(b){
+      b.setAttribute("aria-pressed", b.dataset.id===attuale.id ? "true" : "false");
+    });
+    elTempo.value = attuale.tempo;
+    elTempoVal.textContent = attuale.tempo + " bpm";
+    var libera = attuale.posizione === "LIBERA",
+        p = attuale.posizione === "LA" ? POS_LA : POS_DO,
+        sp = document.getElementById("spostamento");
+    document.getElementById("mani").hidden = libera;
+    document.getElementById("mani-libere").hidden = !libera;
+    sp.hidden = libera || !attuale.spostamento;
+    if(!sp.hidden) sp.textContent = attuale.spostamento;
+    if(!libera){
+      document.getElementById("tit-sx").innerHTML = "Mano sinistra — " + p.sx;
+      document.getElementById("tit-dx").innerHTML = "Mano destra — " + p.dx;
+      document.getElementById("sub-sx").textContent = p.noteSx;
+      document.getElementById("sub-dx").textContent = p.noteDx;
+      tastiera(document.getElementById("kb-sx"), [5,4,3,2,1,0,0], p.inizio);
+      tastiera(document.getElementById("kb-dx"), [1,2,3,4,5,0,0], p.inizio);
+    }
+    mostraStudio();
+    disegna();
+  }
+
+  BRANI.forEach(function(b){
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "brano";
+    btn.dataset.id = b.id;
+    btn.id = "brano-" + b.id;
+    btn.setAttribute("aria-pressed","false");
+    btn.innerHTML = '<span class="n">'+b.nome+'</span><span class="d">'+b.sotto+'</span>';
+    btn.addEventListener("click", function(){ selezionaBrano(b.id); });
+    elBrani.appendChild(btn);
+  });
+
+  /* ---------- ascolto ---------- */
+  var ctx = null, timer = null, sorgenti = [];
+
+  function fermaAudio(){
+    if(timer){ clearTimeout(timer); timer = null; }
+    sorgenti.forEach(function(o){ try{ o.stop(); }catch(e){} });
+    sorgenti = [];
+    if(ctx){ try{ ctx.close(); }catch(e){} ctx = null; }
+    elPlay.textContent = "Ascolta";
+  }
+
+  function suona(midi, t0, dur, vol){
+    var f = 440 * Math.pow(2,(midi-69)/12), fine = t0 + dur;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(vol*0.28, t0 + Math.min(0.4, dur*0.5));
+    g.gain.exponentialRampToValueAtTime(0.0001, fine + 0.18);
+    g.connect(ctx.destination);
+    [["triangle",1,1],["sine",2,0.22]].forEach(function(v){
+      var o = ctx.createOscillator();
+      o.type = v[0];
+      o.frequency.value = f * v[1];
+      var gg = ctx.createGain();
+      gg.gain.value = v[2];
+      o.connect(gg); gg.connect(g);
+      o.start(t0); o.stop(fine + 0.25);
+      sorgenti.push(o);
+    });
+  }
+
+  function riproduci(){
+    if(ctx){ fermaAudio(); return; }
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    ctx = new AC();
+    var bpm = parseInt(elTempo.value,10) || attuale.tempo,
+        b = 60/bpm, t0 = ctx.currentTime + 0.15, t = t0, totale = 0;
+    attuale.dx.forEach(function(n){ if(n[0]) suona(n[0], t, n[1]*b*0.94, 0.16); t += n[1]*b; });
+    totale = t - t0;
+    t = t0;
+    attuale.sx.forEach(function(n){ if(n[0]) suona(n[0], t, n[1]*b*0.94, 0.11); t += n[1]*b; });
+    elPlay.textContent = "Ferma";
+    timer = setTimeout(fermaAudio, (totale + 0.7)*1000);
+  }
+
+  elPlay.addEventListener("click", riproduci);
+  elDita.addEventListener("change", disegna);
+  elTempo.addEventListener("input", function(){
+    elTempoVal.textContent = elTempo.value + " bpm";
+  });
+  document.getElementById("stampa").addEventListener("click", function(){
+    fermaAudio();
+    var aiuto = document.getElementById("aiuto-stampa"),
+        link = document.getElementById("link-scheda"),
+        stampato = false;
+    try{
+      link.href = window.location.href;
+      window.addEventListener("beforeprint", function(){ stampato = true; }, {once:true});
+      window.print();
+    }catch(e){ /* riquadro protetto: mostriamo l'alternativa */ }
+    setTimeout(function(){ if(!stampato) aiuto.hidden = false; }, 400);
+  });
+
+  selezionaBrano(BRANI[0].id);
+  window.addEventListener("load", disegna);
+})();
+</script>
+</body>
+</html>
