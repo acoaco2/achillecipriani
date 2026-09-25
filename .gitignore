@@ -1,14 +1,8 @@
 # Documentazione interna, solo locale (non pubblicare)
-LOGOFARMA.md
 RIEPILOGO.md
 DJ-SETUP.md
 SPARTITI.md
 
-# Sorgenti riservati della presentazione + slide in chiaro: NON pubblicare.
-# Vengono pubblicate solo le slide cifrate (.enc).
-Logofarma/*.pdf
-Logofarma/*.pptx
-Logofarma/slides/*.png
 
 # Repository PRIVATO separato (acoaco2/achillecipriani-privato): documenti interni
 # e originali riservati. NON togliere questa riga: il sito e questo repo sono pubblici.
