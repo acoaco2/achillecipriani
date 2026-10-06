@@ -417,10 +417,12 @@ function avviaDb(tutti) {
   const lettiDb = tutti.filter(l => l.stato === "letto");
   const votati = lettiDb.filter(l => l.voto);
   const audio = lettiDb.filter(l => l.formato === "audio").length;
+  const carta = lettiDb.filter(l => l.formato === "carta").length;
+  const altri = lettiDb.length - audio - carta;
   const conta = s => tutti.filter(l => l.stato === s).length;
   const media = votati.length ? votati.reduce((a, l) => a + l.voto, 0) / votati.length : 0;
   document.getElementById("tiles-db").innerHTML = [
-    ["Libri letti", num(lettiDb.length), `audio ${audio} · altri ${lettiDb.length - audio}`],
+    ["Libri letti", num(lettiDb.length), `audio ${audio} · carta ${carta}` + (altri ? ` · altri ${altri}` : "")],
     ["Voto medio", votati.length ? `${num(media, 1)} ★` : "–", `${votati.length} con le stelline`],
     ["Da leggere", num(conta("da_leggere")), "segnati dal bot o nell'app"],
     ["Abbandonati", num(conta("abbandonato")), `${conta("in_lettura")} in corso`],
