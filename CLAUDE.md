@@ -16,7 +16,9 @@ Sito statico su **GitHub Pages**, dominio `achillecipriani.it`, repository **pub
 | `/aco` | area personale di Aco (login `aco`/`aco`): landing `aco/index.html` | qui |
 | `/aco/libri` | «I miei libri»: pagina e dati **cifrati** | **generati** dal progetto `acodev/db_libri_Aco` (`pubblica_sito.py`): `index.html` dal PC quando cambia il template, `dati.json` **ogni notte dalla rasp**, che ha una deploy key con scrittura su questo repo. Non modificarli a mano |
 
-Prima di un push da qui fai `git pull --rebase`: la rasp committa `aco/libri/dati.json` ogni notte.
+| `/aco/sport` | «Sport»: corsa, apnea, gommone, skate e benessere (Garmin), solo aggregati | pagina `index.html` **qui**; `dati.json` **cifrato e generato** da `acoprogetti/GarminAco/pubblica_sito.py` (stesso `SITO_TOKEN` dei libri), ogni mattina dalla rasp. Non modificare `dati.json` a mano |
+
+Prima di un push da qui fai `git pull --rebase`: la rasp committa `aco/libri/dati.json` ogni notte (e `aco/sport/dati.json` ogni mattina).
 
 ## Anteprima locale
 

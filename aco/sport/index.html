@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sport</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&display=swap" rel="stylesheet">
+<!--
+  I dati (dati.json) sono cifrati e li scrive ogni mattina la rasp:
+  GarminAco/pubblica_sito.py, ultimo passo di run_daily.sh. Questa pagina si modifica qui.
+-->
+<style>
+:root {
+  color-scheme: light;
+  --page: #faf8f3; --surface: #fffefa; --ink: #1b1a17; --ink-2: #4f4b42; --muted: #706b5e;
+  --grid: #ebe6da; --axis: #d9d4c7; --border: rgba(27,26,23,0.12);
+  --series: #1f5d63; --series-hover: #123f44; --track: #ebe6da;
+  --heat-1: #b9d3d1; --heat-2: #6f9fa2; --heat-3: #1f5d63;
+  --good: #2e7d4f; --warn: #9a5b00; --bad: #9a4b3f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0e1615; --surface: #152120; --ink: #f3f1ea; --ink-2: #c9d6d3; --muted: #8f9a97;
+    --grid: #22302e; --axis: #2f3f3d; --border: rgba(255,255,255,0.10);
+    --series: #8fd4c8; --series-hover: #cfeee8; --track: #22302e;
+    --heat-1: #24504f; --heat-2: #4f9a91; --heat-3: #8fd4c8;
+    --good: #6cc28a; --warn: #e0b04a; --bad: #e08b7d;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0e1615; --surface: #152120; --ink: #f3f1ea; --ink-2: #c9d6d3; --muted: #8f9a97;
+  --grid: #22302e; --axis: #2f3f3d; --border: rgba(255,255,255,0.10);
+  --series: #8fd4c8; --series-hover: #cfeee8; --track: #22302e;
+  --heat-1: #24504f; --heat-2: #4f9a91; --heat-3: #8fd4c8;
+  --good: #6cc28a; --warn: #e0b04a; --bad: #e08b7d;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 64px; visibility: hidden; }
+.pronto main { visibility: visible; }
+header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+h1 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 300; font-size: clamp(2.2rem, 6vw, 3rem); letter-spacing: 0.01em; margin: 0; }
+h2 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 500; font-size: 1.6rem; margin: 48px 0 12px; }
+h3 { font-size: 14px; font-weight: 600; margin: 0 0 2px; }
+.indietro { display: inline-block; font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--series); text-decoration: none; margin-bottom: 14px; }
+.indietro:hover { text-decoration: underline; }
+.sub { color: var(--ink-2); font-size: 13px; margin: 0 0 12px; }
+.muted { color: var(--muted); }
+button.theme { background: none; border: 1px solid var(--border); color: var(--ink-2); border-radius: 8px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; min-height: 32px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-width: 0; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.tile .label { color: var(--ink-2); font-size: 13px; }
+.tile .value { font-size: 34px; font-weight: 600; line-height: 1.15; margin-top: 4px; }
+.tile .value small { font-size: 15px; font-weight: 500; color: var(--ink-2); margin-left: 3px; }
+.tile .note { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.delta { font-size: 12.5px; margin-top: 4px; color: var(--ink-2); }
+.delta .su { color: var(--good); } .delta .giu { color: var(--bad); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 12px; margin-top: 12px; }
+.grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+.chart { position: relative; margin-top: 8px; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.chart text.lbl { fill: var(--ink-2); font-variant-numeric: normal; }
+.chart text.val { fill: var(--ink-2); font-weight: 600; }
+.chart .gl { stroke: var(--grid); stroke-width: 1; }
+.chart .ax { stroke: var(--axis); stroke-width: 1; }
+.chart .bar { fill: var(--series); }
+.chart .bar.on { fill: var(--series-hover); }
+.chart .hit { fill: transparent; }
+.chart .line { fill: none; stroke: var(--series); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .area { fill: var(--series); opacity: 0.1; }
+.chart .dot { fill: var(--series); stroke: var(--surface); stroke-width: 2; }
+.chart .cross { stroke: var(--axis); stroke-width: 1; }
+.chart .h0 { fill: var(--track); } .chart .h1 { fill: var(--heat-1); } .chart .h2 { fill: var(--heat-2); } .chart .h3 { fill: var(--heat-3); }
+.chart rect.cell.on { stroke: var(--ink); stroke-width: 1.5; }
+.scala { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+.scala i { display: inline-block; width: 11px; height: 11px; border-radius: 2px; }
+.tip { position: fixed; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12); opacity: 0; transition: opacity .1s; z-index: 10; max-width: 260px; }
+.tip b { font-weight: 600; }
+details.dati { margin-top: 10px; font-size: 12.5px; }
+details.dati summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+details.dati .table-wrap { max-height: 260px; overflow: auto; margin-top: 6px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); }
+th { color: var(--ink-2); font-weight: 600; white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.corrente td { font-weight: 600; }
+.lista { list-style: none; margin: 8px 0 0; padding: 0; }
+.lista li { padding: 7px 0; border-bottom: 1px solid var(--grid); display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; }
+.lista li:last-child { border-bottom: 0; }
+.lista .k { color: var(--ink-2); }
+.lista .v { text-align: right; font-variant-numeric: tabular-nums; }
+.gate { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 14px; }
+.gate::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+.gate.verde::before { background: var(--good); } .gate.giallo::before { background: var(--warn); } .gate.rosso::before { background: var(--bad); }
+.meter { display: flex; gap: 2px; height: 10px; margin-top: 10px; }
+.meter > div { height: 100%; }
+.meter > div:first-child { border-radius: 4px 0 0 4px; } .meter > div:last-child { border-radius: 0 4px 4px 0; }
+.meter .verde { background: var(--good); } .meter .giallo { background: var(--warn); } .meter .rosso { background: var(--bad); }
+.blocco { margin-top: 20vh; text-align: center; color: var(--ink-2); font-size: 15px; }
+.blocco a { color: var(--series); }
+footer { margin-top: 48px; color: var(--muted); font-size: 12px; }
+@media (max-width: 520px) { .tile .value { font-size: 28px; } h2 { margin-top: 36px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <a class="indietro" href="../">← Area personale</a>
+      <h1>Sport</h1>
+      <div class="sub" id="aggiornato"></div>
+    </div>
+    <button class="theme" id="tema" type="button">Tema</button>
+  </header>
+
+  <section class="tiles" id="tiles-anno" aria-label="Quest'anno"></section>
+
+  <h2>Costanza</h2>
+  <div class="card">
+    <h3 id="titolo-costanza">Giorni di attività per settimana</h3>
+    <div class="sub" id="sub-costanza"></div>
+    <div class="chart" id="c-costanza"></div>
+    <div class="scala" aria-hidden="true">meno <i class="h0s"></i><i class="h1s"></i><i class="h2s"></i><i class="h3s"></i> più · 0, 1, 2, 3 o più giorni</div>
+  </div>
+
+  <h2>Corsa</h2>
+  <section class="tiles" id="tiles-corsa"></section>
+  <div class="grid2">
+    <div class="card"><h3>Km a settimana</h3><div class="sub">Ultime 26 settimane</div><div class="chart" id="c-corsa-sett"></div></div>
+    <div class="card"><h3>Passo medio al mese</h3><div class="sub">Più in alto = più veloce · ultimi 24 mesi</div><div class="chart" id="c-corsa-passo"></div></div>
+    <div class="card"><h3>Record e prossimi allenamenti</h3><ul class="lista" id="l-corsa"></ul></div>
+    <div class="card"><h3>Anno per anno</h3><div class="table-wrap"><table id="t-corsa"></table></div></div>
+  </div>
+
+  <h2>Apnea</h2>
+  <section class="tiles" id="tiles-apnea"></section>
+  <div class="grid2">
+    <div class="card"><h3>Tuffi al mese</h3><div class="sub">Ultimi 24 mesi</div><div class="chart" id="c-apnea-mesi"></div></div>
+    <div class="card"><h3>Tuffi per profondità</h3><div class="sub" id="sub-fasce"></div><div class="chart" id="c-apnea-fasce"></div></div>
+    <div class="card"><h3>Record</h3><ul class="lista" id="l-apnea"></ul></div>
+    <div class="card"><h3>Anno per anno</h3><div class="table-wrap"><table id="t-apnea"></table></div></div>
+  </div>
+
+  <h2>Gommone e skate</h2>
+  <div class="grid2">
+    <div class="card"><h3>Gommone</h3><div class="sub">Giorni di uscita al mese, ultimi 24 mesi</div><div class="chart" id="c-gommone"></div><div class="table-wrap" style="margin-top:12px"><table id="t-gommone"></table></div></div>
+    <div class="card"><h3>Skate</h3><div class="sub">Giorni di uscita al mese, ultimi 24 mesi</div><div class="chart" id="c-skate"></div><div class="table-wrap" style="margin-top:12px"><table id="t-skate"></table></div></div>
+  </div>
+
+  <h2>Benessere</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3 id="titolo-notte">Ultimo giorno</h3>
+      <div id="gate-oggi" style="margin-top:6px"></div>
+      <div class="table-wrap" style="margin-top:10px"><table id="t-benessere"></table></div>
+    </div>
+    <div class="card">
+      <h3>Gate degli ultimi 30 giorni</h3>
+      <div class="sub">Verde: RHR ≤ 52 e sleep score &gt; 70 · rosso: RHR ≥ 56 o score &lt; 50 · giallo il resto</div>
+      <div class="meter" id="m-gate"></div>
+      <div class="scala" id="s-gate"></div>
+    </div>
+  </div>
+  <div class="grid4">
+    <div class="card"><h3>Battito a riposo</h3><div class="sub">Media settimanale, bpm</div><div class="chart" id="c-rhr"></div></div>
+    <div class="card"><h3>Sleep score</h3><div class="sub">Media settimanale</div><div class="chart" id="c-score"></div></div>
+    <div class="card"><h3>Ore di sonno</h3><div class="sub">Media settimanale</div><div class="chart" id="c-sonno"></div></div>
+    <div class="card"><h3>Body battery massima</h3><div class="sub">Media settimanale</div><div class="chart" id="c-bb"></div></div>
+  </div>
+
+  <footer>Dati dall'orologio Garmin, aggiornati ogni mattina. «Anno» vuol dire dal 1° gennaio a oggi; il confronto è con lo stesso periodo dell'anno prima. Apnea: un tuffo è un lap sotto 1 m; i metri totali sono la somma delle profondità massime di ogni sessione.</footer>
+</main>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+async function caricaDati() {
+  let k = null;
+  try { k = sessionStorage.getItem("aco-k"); } catch (e) {}
+  if (!k || !window.crypto || !crypto.subtle) return bloccato();
+  try {
+    const CIFRATO = await fetch("dati.json", { cache: "no-store" }).then(r => r.json());
+    const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(k), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b(CIFRATO.salt), iterations: CIFRATO.iterations, hash: "SHA-256" },
+      km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b(CIFRATO.iv) }, key, b(CIFRATO.ct));
+    return JSON.parse(new TextDecoder().decode(pt));
+  } catch (e) { return bloccato(); }
+}
+function bloccato() {
+  document.querySelector("main").innerHTML = '<p class="blocco">Area riservata. <a href="/">Accedi dalla pagina iniziale</a>.</p>';
+  return null;
+}
+
+// ---- tema ----
+const root = document.documentElement;
+try { const t = localStorage.getItem("tema"); if (t) root.dataset.theme = t; } catch (e) {}
+document.getElementById("tema").onclick = () => {
+  const scuro = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = scuro ? "light" : "dark";
+  try { localStorage.setItem("tema", root.dataset.theme); } catch (e) {}
+};
+
+caricaDati().then(DATI => { if (DATI) avvia(DATI); root.classList.add("pronto"); });
+
+// ---- formati ----
+const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+const num = (v, d = 0) => v == null ? "–" : v.toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d });
+const data = (s, anno = true) => { if (!s) return "–"; const [y, m, d] = s.split("-"); return `${+d} ${MESI[m - 1]}${anno ? " " + y : ""}`; };
+const mese = s => { const [y, m] = s.split("-"); return `${MESI[m - 1]} ${y}`; };
+const passo = s => s == null ? "–" : `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
+const durata = s => { if (!s) return "–"; const h = Math.floor(s / 3600), m = Math.round(s % 3600 / 60); return h ? `${h}h ${String(m).padStart(2, "0")}'` : `${m}'`; };
+const ore = s => s == null ? "–" : `${Math.floor(s / 60)}h ${String(Math.round(s % 60)).padStart(2, "0")}'`;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const $ = id => document.getElementById(id);
+
+// ---- tooltip ----
+const tip = $("tip");
+function mostra(html, x, y) {
+  tip.innerHTML = html; tip.style.opacity = 1;
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.min(x + 14, innerWidth - r.width - 8) + "px";
+  tip.style.top = (y - r.height - 12 < 8 ? y + 16 : y - r.height - 12) + "px";
+}
+function nascondi() { tip.style.opacity = 0; }
+document.addEventListener("scroll", nascondi, { passive: true });
+
+// ---- grafici (SVG a mano) ----
+const NS = "http://www.w3.org/2000/svg";
+function svg(el, w, h) {
+  el.innerHTML = "";
+  const s = document.createElementNS(NS, "svg");
+  s.setAttribute("viewBox", `0 0 ${w} ${h}`); s.setAttribute("height", h);
+  el.appendChild(s); return s;
+}
+function add(p, tag, attrs, testo) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (testo != null) e.textContent = testo;
+  p.appendChild(e); return e;
+}
+function tacche(max, n = 4) {
+  if (max <= 0) return [0, 1];
+  const grezzo = max / n, p = 10 ** Math.floor(Math.log10(grezzo));
+  const passo = [1, 2, 5, 10].map(f => f * p).find(f => f >= grezzo);
+  const out = []; for (let v = 0; v <= max + passo * 0.001; v += passo) out.push(+v.toFixed(6));
+  if (out[out.length - 1] < max) out.push(out[out.length - 1] + passo);
+  return out;
+}
+// colonna con l'estremo arrotondato (4px) e la base dritta
+function colonna(p, x, y, w, h, cls) {
+  const r = Math.min(4, w / 2, h);
+  return add(p, "path", { class: cls, d: `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z` });
+}
+function tabellaDati(el, intest, righe) {
+  const d = document.createElement("details"); d.className = "dati";
+  d.innerHTML = `<summary>Tabella</summary><div class="table-wrap"><table><tr>${intest.map((h, i) => `<th${i ? ' class="num"' : ""}>${h}</th>`).join("")}</tr>${
+    righe.map(r => `<tr>${r.map((c, i) => `<td${i ? ' class="num"' : ""}>${c}</td>`).join("")}</tr>`).join("")}</table></div>`;
+  el.closest(".card").appendChild(d);
+}
+const GRAFICI = [];
+function grafico(el, disegna) { GRAFICI.push([el, disegna]); disegna(el); }
+let attesa; addEventListener("resize", () => { clearTimeout(attesa); attesa = setTimeout(() => GRAFICI.forEach(([el, f]) => f(el)), 150); });
+
+// colonne verticali: items [{x, v, tip}]; etichetta x ogni `ogni` elementi
+function colonne(el, items, { h = 190, ogni = 1, fmt = v => num(v), etichetta = it => it.x } = {}) {
+  grafico(el, el => {
+    const W = el.clientWidth || 320, L = 34, B = 22, T = 10, s = svg(el, W, h);
+    const max = Math.max(...items.map(i => i.v || 0)), tk = tacche(max), top = tk[tk.length - 1] || 1;
+    const ph = h - B - T, band = (W - L) / items.length, bw = Math.min(24, Math.max(2, band - 2));
+    const y = v => T + ph - v / top * ph;
+    tk.forEach(v => { add(s, "line", { class: v ? "gl" : "ax", x1: L, x2: W, y1: y(v), y2: y(v) }); add(s, "text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, fmt(v)); });
+    items.forEach((it, i) => {
+      const x = L + i * band + (band - bw) / 2, v = it.v || 0;
+      const bar = v > 0 ? colonna(s, x, y(v), bw, ph * v / top, "bar") : null;
+      if (i % ogni === 0) add(s, "text", { x: L + i * band + band / 2, y: h - 6, "text-anchor": "middle" }, etichetta(it, i));
+      const hit = add(s, "rect", { class: "hit", x: L + i * band, y: T, width: band, height: ph });
+      hit.addEventListener("pointermove", e => { bar && bar.classList.add("on"); mostra(it.tip, e.clientX, e.clientY); });
+      hit.addEventListener("pointerleave", () => { bar && bar.classList.remove("on"); nascondi(); });
+    });
+  });
+}
+
+// barre orizzontali: items [{x, v, tip}]
+function barre(el, items, { fmt = v => num(v) } = {}) {
+  grafico(el, el => {
+    const W = el.clientWidth || 320, L = 70, R = 44, riga = 30, h = items.length * riga, s = svg(el, W, h);
+    const max = Math.max(...items.map(i => i.v), 1), bh = 18;
+    items.forEach((it, i) => {
+      const yy = i * riga + (riga - bh) / 2, w = (W - L - R) * it.v / max;
+      add(s, "text", { class: "lbl", x: L - 8, y: yy + bh / 2 + 4, "text-anchor": "end" }, it.x);
+      let bar = null;
+      if (w > 0) { const r = Math.min(4, w); bar = add(s, "path", { class: "bar", d: `M${L},${yy}H${L + w - r}Q${L + w},${yy} ${L + w},${yy + r}V${yy + bh - r}Q${L + w},${yy + bh} ${L + w - r},${yy + bh}H${L}Z` }); }
+      add(s, "text", { class: "val", x: L + w + 6, y: yy + bh / 2 + 4 }, fmt(it.v));
+      const hit = add(s, "rect", { class: "hit", x: 0, y: i * riga, width: W, height: riga });
+      hit.addEventListener("pointermove", e => { bar && bar.classList.add("on"); mostra(it.tip, e.clientX, e.clientY); });
+      hit.addEventListener("pointerleave", () => { bar && bar.classList.remove("on"); nascondi(); });
+    });
+  });
+}
+
+// linea con mirino: punti [{x, v|null, tip}]; inverti: valori piccoli in alto (il passo)
+function linea(el, punti, { h = 170, fmt = v => num(v), inverti = false, ogni = 1, etichetta = p => p.x, margine = 0.1 } = {}) {
+  grafico(el, el => {
+    const W = el.clientWidth || 300, L = 38, R = 10, B = 22, T = 12, s = svg(el, W, h);
+    const val = punti.map(p => p.v).filter(v => v != null);
+    if (!val.length) return;
+    let lo = Math.min(...val), hi = Math.max(...val); const pad = (hi - lo || hi * 0.1 || 1) * margine; lo -= pad; hi += pad;
+    const ph = h - B - T, x = i => L + (punti.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (punti.length - 1));
+    const y = v => inverti ? T + (v - lo) / (hi - lo) * ph : T + ph - (v - lo) / (hi - lo) * ph;
+    for (let k = 0; k <= 3; k++) {
+      const v = lo + (hi - lo) * k / 3, yy = y(v), base = inverti ? k === 3 : k === 0;
+      add(s, "line", { class: base ? "ax" : "gl", x1: L, x2: W - R, y1: yy, y2: yy });
+      add(s, "text", { x: L - 6, y: yy + 4, "text-anchor": "end" }, fmt(v));
+    }
+    // tratti continui: un mese senza dati interrompe la linea
+    let d = "", prima = true;
+    punti.forEach((p, i) => { if (p.v == null) { prima = true; return; } d += `${prima ? "M" : "L"}${x(i)},${y(p.v)}`; prima = false; });
+    add(s, "path", { class: "line", d });
+    punti.forEach((p, i) => { if (i % ogni === 0) add(s, "text", { x: x(i), y: h - 6, "text-anchor": "middle" }, etichetta(p, i)); });
+    const ultimo = punti.map((p, i) => [p, i]).filter(([p]) => p.v != null).pop();
+    add(s, "circle", { class: "dot", cx: x(ultimo[1]), cy: y(ultimo[0].v), r: 4 });
+    const cross = add(s, "line", { class: "cross", y1: T, y2: T + ph, display: "none" });
+    const dot = add(s, "circle", { class: "dot", r: 4, display: "none" });
+    const hit = add(s, "rect", { class: "hit", x: L, y: 0, width: W - L - R, height: h });
+    hit.addEventListener("pointermove", e => {
+      const r = s.getBoundingClientRect(), px = (e.clientX - r.left) * W / r.width;
+      const i = Math.max(0, Math.min(punti.length - 1, Math.round((px - L) / ((W - L - R) / Math.max(1, punti.length - 1)))));
+      const p = punti[i];
+      cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.removeAttribute("display");
+      if (p.v != null) { dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(p.v)); dot.removeAttribute("display"); } else dot.setAttribute("display", "none");
+      mostra(p.tip, e.clientX, e.clientY);
+    });
+    hit.addEventListener("pointerleave", () => { cross.setAttribute("display", "none"); dot.setAttribute("display", "none"); nascondi(); });
+  });
+}
+
+// ---- pezzi di pagina ----
+function delta(oggi, prima, unita, d = 0) {
+  if (prima == null) return "";
+  const diff = oggi - prima;
+  if (Math.abs(diff) < 10 ** -d / 2) return `<div class="delta">come l'anno scorso (${num(prima, d)}${unita})</div>`;
+  const cls = diff > 0 ? "su" : "giu";
+  return `<div class="delta"><span class="${cls}">${diff > 0 ? "▲ +" : "▼ −"}${num(Math.abs(diff), d)}${unita}</span> rispetto al ${ANNO - 1} (${num(prima, d)}${unita})</div>`;
+}
+function tile(label, valore, unita, extra = "", note = "") {
+  return `<div class="card tile"><div class="label">${label}</div><div class="value">${valore}${unita ? `<small>${unita}</small>` : ""}</div>${extra}${note ? `<div class="note">${note}</div>` : ""}</div>`;
+}
+function tabella(el, intest, righe, corrente) {
+  el.innerHTML = `<tr>${intest.map((h, i) => `<th${i ? ' class="num"' : ""}>${h}</th>`).join("")}</tr>` +
+    righe.map(r => `<tr${r[0] == corrente ? ' class="corrente"' : ""}>${r.map((c, i) => `<td${i ? ' class="num"' : ""}>${c}</td>`).join("")}</tr>`).join("");
+}
+const lista = (el, voci) => { el.innerHTML = voci.map(([k, v]) => `<li><span class="k">${k}</span><span class="v">${v}</span></li>`).join(""); };
+const etichettaMese = p => MESI[+p.x.slice(5) - 1] + " " + p.x.slice(2, 4);
+
+let ANNO;
+function avvia(D) {
+  ANNO = +D.oggi.slice(0, 4);
+  const stretto = () => (document.querySelector("main").clientWidth || 360) < 560;
+  $("aggiornato").textContent = `Dati al ${data(D.oggi)}` + (D.aggiornato ? ` · aggiornati alle ${D.aggiornato.slice(11)}` : "");
+
+  // --- quest'anno ---
+  const { corsa: C, apnea: A, gommone: G, skate: S, benessere: W } = D;
+  const oggiCorto = data(D.oggi, false);
+  $("tiles-anno").innerHTML =
+    tile("Corsa", num(C.ytd.km), "km", delta(C.ytd.km, C.prev.km, " km"), `ultima: ${data(C.ultima?.data, false)}`) +
+    tile("Apnea", num(A.ytd.tuffi), "tuffi", delta(A.ytd.tuffi, A.prev.tuffi, ""), `ultima: ${data(A.ultima?.data, false)}`) +
+    tile("Gommone", num(G.ytd.giorni), "giorni", delta(G.ytd.giorni, G.prev.giorni, ""), `ultima: ${data(G.ultima?.data, false)}`) +
+    tile("Skate", num(S.ytd.giorni), "giorni", delta(S.ytd.giorni, S.prev.giorni, ""), `ultima: ${data(S.ultima?.data, false)}`);
+
+  // --- costanza: 4 righe × settimane, giorni con quello sport ---
+  const SPORT = [["c", "Corsa"], ["a", "Apnea"], ["g", "Gommone"], ["s", "Skate"]];
+  const inizio = new Date(D.calendario.inizio + "T12:00:00");
+  const settimane = Array.from({ length: 53 }, (_, w) => {
+    const lun = new Date(inizio); lun.setDate(lun.getDate() + 7 * w);
+    const giorni = Array.from({ length: 7 }, (_, g) => { const d = new Date(lun); d.setDate(d.getDate() + g); return d.toISOString().slice(0, 10); });
+    return { lun: giorni[0], conta: Object.fromEntries(SPORT.map(([k]) => [k, giorni.filter(g => (D.calendario.giorni[g] || "").includes(k)).length])) };
+  });
+  document.querySelectorAll(".scala i").forEach((i, n) => i.style.background = `var(--${n ? "heat-" + n : "track"})`);
+  grafico($("c-costanza"), el => {
+    const sett = stretto() ? settimane.slice(-26) : settimane;
+    $("sub-costanza").textContent = stretto() ? "Ultime 26 settimane" : "Ultime 53 settimane";
+    const W = el.clientWidth || 320, L = 66, T = 18, gap = 2, cw = (W - L) / sett.length, ch = Math.min(22, Math.max(12, cw * 1.6));
+    const s = svg(el, W, T + SPORT.length * (ch + gap));
+    let ultimoMese = "";
+    sett.forEach((w, i) => {
+      const m = w.lun.slice(5, 7);
+      if (m !== ultimoMese && (i > 0 || +w.lun.slice(8) <= 7)) { add(s, "text", { x: L + i * cw, y: 11 }, MESI[m - 1]); }
+      ultimoMese = m;
+    });
+    SPORT.forEach(([k, nome], r) => {
+      const y = T + r * (ch + gap);
+      add(s, "text", { class: "lbl", x: L - 8, y: y + ch / 2 + 4, "text-anchor": "end" }, nome);
+      sett.forEach((w, i) => {
+        const n = w.conta[k], cell = add(s, "rect", { class: `cell h${Math.min(n, 3)}`, x: L + i * cw + gap / 2, y, width: Math.max(1, cw - gap), height: ch, rx: 2 });
+        cell.addEventListener("pointermove", e => { cell.classList.add("on"); mostra(`<b>${nome}</b><br>settimana dal ${data(w.lun)}<br>${n === 1 ? "1 giorno" : n + " giorni"}`, e.clientX, e.clientY); });
+        cell.addEventListener("pointerleave", () => { cell.classList.remove("on"); nascondi(); });
+      });
+    });
+  });
+  tabellaDati($("c-costanza"), ["Settimana dal", ...SPORT.map(s => s[1])], settimane.slice().reverse().map(w => [data(w.lun), ...SPORT.map(([k]) => w.conta[k])]));
+
+  // --- corsa ---
+  $("tiles-corsa").innerHTML =
+    tile("Km nel " + ANNO, num(C.ytd.km), "km", delta(C.ytd.km, C.prev.km, " km")) +
+    tile("Uscite", num(C.ytd.uscite), "", delta(C.ytd.uscite, C.prev.uscite, "")) +
+    tile("Passo medio", passo(C.ytd.passo), "/km", C.prev.passo ? `<div class="delta"><span class="${C.ytd.passo <= C.prev.passo ? "su" : "giu"}">${C.ytd.passo <= C.prev.passo ? "▲ " : "▼ "}${Math.abs(C.ytd.passo - C.prev.passo)}" al km ${C.ytd.passo <= C.prev.passo ? "più veloce" : "più lento"}</span> del ${ANNO - 1}</div>` : "") +
+    tile("Ultima corsa", num(C.ultima?.km, 1), "km", "", `${data(C.ultima?.data)} · ${durata(C.ultima?.sec)} · ${passo(C.ultima?.passo)}/km`);
+  colonne($("c-corsa-sett"), C.settimane.map(w => ({ x: w.lun, v: w.km, tip: `<b>${num(w.km, 1)} km</b><br>settimana dal ${data(w.lun)}` })),
+    { ogni: 4, etichetta: it => data(it.x, false) });
+  tabellaDati($("c-corsa-sett"), ["Settimana dal", "Km"], C.settimane.slice().reverse().map(w => [data(w.lun), num(w.km, 1)]));
+  linea($("c-corsa-passo"), C.mesi.map(m => ({ x: m.mese, v: m.passo, tip: m.passo ? `<b>${passo(m.passo)}/km</b><br>${mese(m.mese)} · ${num(m.km, 1)} km in ${m.uscite} uscite` : `${mese(m.mese)}<br>nessuna corsa` })),
+    { inverti: true, fmt: passo, ogni: 3, etichetta: etichettaMese });
+  tabellaDati($("c-corsa-passo"), ["Mese", "Uscite", "Km", "Passo"], C.mesi.slice().reverse().map(m => [mese(m.mese), m.uscite, num(m.km, 1), passo(m.passo)]));
+  const voci = [];
+  if (C.record.lunga) voci.push(["Corsa più lunga", `${num(C.record.lunga.km, 1)} km in ${durata(C.record.lunga.sec)} · ${data(C.record.lunga.data)}`]);
+  if (C.record.passo) voci.push(["Passo migliore (≥ 3 km)", `${passo(C.record.passo.passo)}/km su ${num(C.record.passo.km, 1)} km · ${data(C.record.passo.data)}`]);
+  (C.prossimi || []).forEach(w => voci.push([`${data(w.data, false)} · ${esc(w.nome)}`, `${num(w.km, 1)} km · circa ${durata(w.sec)}`]));
+  if (!C.prossimi?.length) voci.push(["Prossimi allenamenti", '<span class="muted">nessuno in calendario</span>']);
+  lista($("l-corsa"), voci);
+  tabella($("t-corsa"), ["Anno", "Uscite", "Km", "Passo", "Dislivello"],
+    C.anni.slice().reverse().map(a => [a.anno, a.uscite, num(a.km, 1), passo(a.passo), num(a.asc) + " m"]), ANNO);
+
+  // --- apnea ---
+  $("tiles-apnea").innerHTML =
+    tile("Tuffi nel " + ANNO, num(A.ytd.tuffi), "", delta(A.ytd.tuffi, A.prev.tuffi, "")) +
+    tile("Sessioni", num(A.ytd.sessioni), "", delta(A.ytd.sessioni, A.prev.sessioni, "")) +
+    tile("Più profondo dell'anno", num(A.ytd.prof, 1), "m", delta(A.ytd.prof, A.prev.prof, " m", 1)) +
+    tile("Ultima sessione", num(A.ultima?.tuffi), "tuffi", "", `${data(A.ultima?.data)} · fino a ${num(A.ultima?.prof, 1)} m`);
+  colonne($("c-apnea-mesi"), A.mesi.map(m => ({ x: m.mese, v: m.tuffi, tip: m.tuffi ? `<b>${m.tuffi} tuffi</b><br>${mese(m.mese)} · fino a ${num(m.prof, 1)} m` : `${mese(m.mese)}<br>nessun tuffo` })),
+    { ogni: 3, etichetta: etichettaMese });
+  tabellaDati($("c-apnea-mesi"), ["Mese", "Tuffi", "Profondità max"], A.mesi.slice().reverse().map(m => [mese(m.mese), m.tuffi, m.prof ? num(m.prof, 1) + " m" : "–"]));
+  $("sub-fasce").textContent = `Nel ${ANNO}, per profondità massima del tuffo`;
+  const fascia = f => f.a >= 999 ? `≥ ${f.da} m` : f.da === 0 ? `< ${f.a} m` : `${f.da}–${f.a} m`;
+  barre($("c-apnea-fasce"), A.fasce.map(f => ({ x: fascia(f), v: f.anno, tip: `<b>${fascia(f)}</b><br>${f.anno} tuffi nel ${ANNO}<br>${f.tutti} in tutto` })));
+  tabellaDati($("c-apnea-fasce"), ["Profondità", "Nel " + ANNO, "In tutto"], A.fasce.map(f => [fascia(f), f.anno, f.tutti]));
+  const va = [];
+  if (A.record.prof) va.push(["Tuffo più profondo", `${num(A.record.prof.m, 1)} m · ${data(A.record.prof.data)}`]);
+  if (A.record.fondo) va.push(["Tuffo più lungo", `${Math.floor(A.record.fondo.sec / 60)}'${String(A.record.fondo.sec % 60).padStart(2, "0")}" · ${data(A.record.fondo.data)}`]);
+  va.push(["Metri totali nel " + ANNO, `${num(A.ytd.metri)} m (${num(A.prev.metri)} m nel ${ANNO - 1})`]);
+  lista($("l-apnea"), va);
+  tabella($("t-apnea"), ["Anno", "Sessioni", "Tuffi", "Più profondo", "Metri totali"],
+    A.anni.slice().reverse().map(a => [a.anno, a.sessioni, a.tuffi, num(a.prof, 1) + " m", num(a.metri) + " m"]), ANNO);
+
+  // --- gommone e skate ---
+  for (const [id, X] of [["gommone", G], ["skate", S]]) {
+    colonne($("c-" + id), X.mesi.map(m => ({ x: m.mese, v: m.giorni, tip: m.giorni ? `<b>${m.giorni === 1 ? "1 giorno" : m.giorni + " giorni"}</b><br>${mese(m.mese)} · ${num(m.km, 1)} km · ${durata(m.sec)}` : `${mese(m.mese)}<br>nessuna uscita` })),
+      { h: 150, ogni: 3, etichetta: etichettaMese });
+    tabella($("t-" + id), ["Anno", "Giorni", "Km", "Ore"], X.anni.slice().reverse().map(a => [a.anno, a.giorni, num(a.km, 1), num(a.sec / 3600, 1)]), ANNO);
+  }
+
+  // --- benessere ---
+  if (!W) return;
+  const U = W.ultimo, NOMI = { verde: "verde", giallo: "giallo", rosso: "rosso" };
+  $("titolo-notte").textContent = `Ultimo giorno · ${data(U.data)}`;
+  $("gate-oggi").innerHTML = U.gate ? `<span class="gate ${U.gate}">Gate ${NOMI[U.gate]}</span>` : '<span class="muted">Sonno non ancora sincronizzato</span>';
+  const righe = [["Battito a riposo", "rhr", v => num(v) + " bpm", v => num(v, 1) + " bpm"], ["Sleep score", "score", v => num(v), v => num(v, 1)],
+    ["Sonno", "sonno", ore, ore], ["Sonno profondo", "deep", ore, ore], ["REM", "rem", ore, ore],
+    ["Body battery max", "bb", v => num(v), v => num(v, 1)], ["Passi", "passi", v => num(v), v => num(Math.round(v))]];
+  tabella($("t-benessere"), ["", data(U.data, false), "Media 7 giorni", "Media 30 giorni"],
+    righe.map(([n, k, f1, f2]) => [n, U[k] == null ? "–" : f1(U[k]), W.medie7[k] == null ? "–" : f2(W.medie7[k]), W.medie30[k] == null ? "–" : f2(W.medie30[k])]));
+  const g = W.gate30, tot = (g.verde || 0) + (g.giallo || 0) + (g.rosso || 0);
+  $("m-gate").innerHTML = ["verde", "giallo", "rosso"].filter(k => g[k]).map(k => `<div class="${k}" style="flex:${g[k]}" title="${g[k]} ${k}"></div>`).join("");
+  $("s-gate").innerHTML = ["verde", "giallo", "rosso"].map(k => `<span class="gate ${k}" style="font-weight:400;font-size:12.5px;margin-right:10px">${g[k] || 0} ${k === "verde" ? "verdi" : k === "giallo" ? "gialli" : "rossi"}</span>`).join("") + `<span>su ${tot} notti</span>`;
+  const sett = W.settimane, et = p => data(p.x, false);
+  const serie = [["c-rhr", "rhr", v => num(v, 0), v => num(v, 1) + " bpm"], ["c-score", "score", v => num(v, 0), v => num(v, 1)],
+    ["c-sonno", "sonno", v => num(v / 60, 1) + "h", ore], ["c-bb", "bb", v => num(v, 0), v => num(v, 1)]];
+  for (const [id, k, fAsse, fTip] of serie) {
+    linea($(id), sett.map(w => ({ x: w.lun, v: w[k], tip: `<b>${w[k] == null ? "–" : fTip(w[k])}</b><br>settimana dal ${data(w.lun)}` })),
+      { h: 150, fmt: fAsse, ogni: Math.ceil(sett.length / 4), etichetta: et });
+    tabellaDati($(id), ["Settimana dal", "Media"], sett.slice().reverse().map(w => [data(w.lun), w[k] == null ? "–" : fTip(w[k])]));
+  }
+}
+</script>
+</body>
+</html>
