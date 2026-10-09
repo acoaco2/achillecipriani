@@ -295,7 +295,7 @@ function cella(c, frequente) {
   if (n < a) return ["warn", `${n} giri su ${a}`];
   return ["ok", frequente ? `${n} giri su ${a}` : n > 1 ? `${n} giri` : "fatto" + (e === "ok" ? ", senza errori" : "")];
 }
-const ESITI = { ok: ["ok", "ok"], errore: ["bad", "errori"], saltato: ["bad", "saltato"], "in corso": ["", "in corso"] };
+const ESITI = { ok: ["ok", "ok"], errore: ["bad", "errori"], saltato: ["bad", "saltato"], "in corso": ["", "in corso"], spento: ["spento", "spento"] };
 
 function avvia(D) {
   ORA = D.aggiornato;
