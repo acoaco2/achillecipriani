@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rasp</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&display=swap" rel="stylesheet">
+<!--
+  I dati (dati.json) sono cifrati e li scrive la rasp alle 09:15, 16:15 e 22:15:
+  ~/.local/bin/pubblica-stato-rasp (copia di riferimento in acoprogetti/rasp/pubblica_stato.py).
+  Questa pagina si modifica qui.
+-->
+<style>
+:root {
+  color-scheme: light;
+  --page: #faf8f3; --surface: #fffefa; --ink: #1b1a17; --ink-2: #4f4b42; --muted: #706b5e;
+  --grid: #ebe6da; --axis: #d9d4c7; --border: rgba(27,26,23,0.12);
+  --series: #1f5d63; --series-hover: #123f44; --track: #ebe6da;
+  --good: #2e7d4f; --warn: #9a5b00; --bad: #b0473a;
+  --good-bg: rgba(46,125,79,0.10); --warn-bg: rgba(154,91,0,0.10); --bad-bg: rgba(176,71,58,0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0e1615; --surface: #152120; --ink: #f3f1ea; --ink-2: #c9d6d3; --muted: #8f9a97;
+    --grid: #22302e; --axis: #2f3f3d; --border: rgba(255,255,255,0.10);
+    --series: #8fd4c8; --series-hover: #cfeee8; --track: #22302e;
+    --good: #6cc28a; --warn: #e0b04a; --bad: #e8806f;
+    --good-bg: rgba(108,194,138,0.12); --warn-bg: rgba(224,176,74,0.12); --bad-bg: rgba(232,128,111,0.13);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0e1615; --surface: #152120; --ink: #f3f1ea; --ink-2: #c9d6d3; --muted: #8f9a97;
+  --grid: #22302e; --axis: #2f3f3d; --border: rgba(255,255,255,0.10);
+  --series: #8fd4c8; --series-hover: #cfeee8; --track: #22302e;
+  --good: #6cc28a; --warn: #e0b04a; --bad: #e8806f;
+  --good-bg: rgba(108,194,138,0.12); --warn-bg: rgba(224,176,74,0.12); --bad-bg: rgba(232,128,111,0.13);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 64px; visibility: hidden; }
+.pronto main { visibility: visible; }
+header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+h1 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 300; font-size: clamp(2.2rem, 6vw, 3rem); letter-spacing: 0.01em; margin: 0; }
+h2 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 500; font-size: 1.6rem; margin: 48px 0 12px; }
+h3 { font-size: 14px; font-weight: 600; margin: 0 0 2px; }
+.indietro { display: inline-block; font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--series); text-decoration: none; margin-bottom: 14px; }
+.indietro:hover { text-decoration: underline; }
+.sub { color: var(--ink-2); font-size: 13px; margin: 0 0 12px; }
+.muted { color: var(--muted); }
+button.theme { background: none; border: 1px solid var(--border); color: var(--ink-2); border-radius: 8px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; min-height: 32px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-width: 0; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 12px; }
+.tile .label { color: var(--ink-2); font-size: 13px; }
+.tile .value { font-size: 34px; font-weight: 600; line-height: 1.15; margin-top: 4px; }
+.tile .value small { font-size: 15px; font-weight: 500; color: var(--ink-2); margin-left: 3px; }
+.tile .note { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.barra { height: 6px; border-radius: 3px; background: var(--track); margin-top: 8px; overflow: hidden; }
+.barra > div { height: 100%; background: var(--series); border-radius: 3px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 12px; margin-top: 12px; }
+
+/* riepilogo in cima */
+.riepilogo { display: flex; gap: 14px; align-items: flex-start; }
+.riepilogo .icona { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 17px; color: var(--surface); }
+.riepilogo.ok { border-color: var(--good); background: linear-gradient(var(--good-bg), var(--good-bg)), var(--surface); }
+.riepilogo.ok .icona { background: var(--good); }
+.riepilogo.warn { border-color: var(--warn); background: linear-gradient(var(--warn-bg), var(--warn-bg)), var(--surface); }
+.riepilogo.warn .icona { background: var(--warn); }
+.riepilogo.bad { border-color: var(--bad); background: linear-gradient(var(--bad-bg), var(--bad-bg)), var(--surface); }
+.riepilogo.bad .icona { background: var(--bad); }
+.riepilogo .titolo { font-weight: 600; font-size: 17px; line-height: 34px; }
+.riepilogo ul { margin: 2px 0 0; padding-left: 18px; font-size: 14px; color: var(--ink-2); }
+.riepilogo li { margin: 2px 0; }
+
+/* stato con pallino e testo: il colore non è mai da solo */
+.st { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.st::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; }
+.st.ok::before { background: var(--good); } .st.warn::before { background: var(--warn); } .st.bad::before { background: var(--bad); }
+.st.spento::before { background: transparent; border: 1.5px solid var(--muted); width: 8px; height: 8px; }
+.st.bad, .st.warn { font-weight: 600; }
+
+.lista { list-style: none; margin: 8px 0 0; padding: 0; }
+.lista li { padding: 8px 0; border-bottom: 1px solid var(--grid); display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13.5px; }
+.lista li:last-child { border-bottom: 0; }
+.lista .k { color: var(--ink); min-width: 0; }
+.lista .k small { display: block; color: var(--muted); font-size: 12px; }
+.lista .v { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.lista .v small { display: block; color: var(--muted); font-size: 12px; }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { color: var(--ink-2); font-weight: 600; white-space: nowrap; }
+td.nw { white-space: nowrap; font-variant-numeric: tabular-nums; }
+td small { display: block; color: var(--muted); font-size: 12px; }
+tr:last-child td { border-bottom: 0; }
+
+.chart { position: relative; margin-top: 8px; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.chart text.lbl { fill: var(--ink-2); font-variant-numeric: normal; }
+.chart .gl { stroke: var(--grid); stroke-width: 1; }
+.chart .ax { stroke: var(--axis); stroke-width: 1; }
+.chart .hit { fill: transparent; }
+.chart .line { fill: none; stroke: var(--series); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .dot { fill: var(--series); stroke: var(--surface); stroke-width: 2; }
+.chart .cross { stroke: var(--axis); stroke-width: 1; }
+.chart .c-ok { fill: var(--good); } .chart .c-warn { fill: var(--warn); } .chart .c-bad { fill: var(--bad); }
+.chart .c-np { fill: var(--track); } .chart .c-nd { fill: none; stroke: var(--grid); stroke-width: 1; }
+.chart rect.cell.on { stroke: var(--ink); stroke-width: 1.5; }
+.scala { display: flex; align-items: center; gap: 4px 12px; font-size: 11.5px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+.scala span { display: inline-flex; align-items: center; gap: 5px; }
+.scala i { display: inline-block; width: 11px; height: 11px; border-radius: 2px; }
+.tip { position: fixed; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12); opacity: 0; transition: opacity .1s; z-index: 10; max-width: 260px; }
+.tip b { font-weight: 600; }
+details.dati { margin-top: 10px; font-size: 12.5px; }
+details.dati summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+details.dati .table-wrap { max-height: 260px; overflow: auto; margin-top: 6px; }
+
+/* progetti */
+.filtri { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; }
+.filtri button { background: none; border: 1px solid var(--border); color: var(--ink-2); border-radius: 999px; padding: 4px 12px; cursor: pointer; font: inherit; font-size: 13px; min-height: 32px; }
+.filtri button[aria-pressed="true"] { background: var(--series); border-color: var(--series); color: var(--surface); }
+.progetti h3 { margin: 18px 0 4px; color: var(--ink-2); font-weight: 600; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+.progetti h3:first-child { margin-top: 0; }
+.prog { padding: 10px 0; border-bottom: 1px solid var(--grid); display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; }
+.prog:last-child { border-bottom: 0; }
+.prog .n { font-weight: 600; font-size: 14px; }
+.prog .s { font-size: 12.5px; color: var(--ink-2); text-align: right; }
+.prog .c { grid-column: 1 / -1; font-size: 13px; color: var(--ink-2); }
+.prog .d { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+
+.blocco { margin-top: 20vh; text-align: center; color: var(--ink-2); font-size: 15px; }
+.blocco a { color: var(--series); }
+footer { margin-top: 48px; color: var(--muted); font-size: 12px; }
+@media (max-width: 520px) { .tile .value { font-size: 28px; } h2 { margin-top: 36px; } .prog .s { max-width: 45vw; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <a class="indietro" href="../">← Area personale</a>
+      <h1>Rasp</h1>
+      <div class="sub" id="aggiornato"></div>
+    </div>
+    <button class="theme" id="tema" type="button">Tema</button>
+  </header>
+
+  <section class="card riepilogo" id="riepilogo" aria-live="polite"></section>
+  <section class="tiles" id="tiles" aria-label="Sistema"></section>
+
+  <h2>Servizi</h2>
+  <div class="grid2">
+    <div class="card"><h3>Bot Telegram</h3><ul class="lista" id="l-bot"></ul></div>
+    <div class="card"><h3>Sistema</h3><ul class="lista" id="l-sistema"></ul></div>
+  </div>
+
+  <h2>Attività pianificate</h2>
+  <div class="card"><div class="table-wrap"><table id="t-attivita"></table></div></div>
+  <div class="card" style="margin-top:12px">
+    <h3>Ultimi 30 giorni</h3>
+    <div class="sub">Un quadretto per giorno: i giri fatti rispetto a quelli previsti</div>
+    <div class="chart" id="c-giri"></div>
+    <div class="scala" id="s-giri"></div>
+  </div>
+
+  <h2>Backup e sito</h2>
+  <div class="grid2">
+    <div class="card"><h3>Backup</h3><ul class="lista" id="l-backup"></ul></div>
+    <div class="card"><h3>Pubblicazioni su achillecipriani.it</h3><ul class="lista" id="l-sito"></ul></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <h3>Temperatura della CPU</h3>
+    <div class="sub">Ultimi 7 giorni, a ogni controllo · °C</div>
+    <div class="chart" id="c-temp"></div>
+  </div>
+
+  <h2>Progetti</h2>
+  <div class="filtri" role="group" aria-label="Filtra i progetti" id="filtri"></div>
+  <div class="card progetti" id="progetti"></div>
+  <div class="sub" id="sub-progetti" style="margin-top:8px"></div>
+
+  <footer>Dati raccolti dalla rasp tre volte al giorno, alle 9:15, 16:15 e 22:15; la pagina si aggiorna solo quando cambia qualcosa. I giri delle attività vengono dal journal di sistema, gli esiti dai loro log. Progetti dalla nota «Progetti acodev» di Obsidian.</footer>
+</main>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+async function caricaDati() {
+  let k = null;
+  try { k = sessionStorage.getItem("aco-k"); } catch (e) {}
+  if (!k || !window.crypto || !crypto.subtle) return bloccato();
+  try {
+    const CIFRATO = await fetch("dati.json", { cache: "no-store" }).then(r => r.json());
+    const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(k), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b(CIFRATO.salt), iterations: CIFRATO.iterations, hash: "SHA-256" },
+      km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b(CIFRATO.iv) }, key, b(CIFRATO.ct));
+    return JSON.parse(new TextDecoder().decode(pt));
+  } catch (e) { return bloccato(); }
+}
+function bloccato() {
+  document.querySelector("main").innerHTML = '<p class="blocco">Area riservata. <a href="/">Accedi dalla pagina iniziale</a>.</p>';
+  return null;
+}
+
+// ---- tema ----
+const root = document.documentElement;
+try { const t = localStorage.getItem("tema"); if (t) root.dataset.theme = t; } catch (e) {}
+document.getElementById("tema").onclick = () => {
+  const scuro = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = scuro ? "light" : "dark";
+  try { localStorage.setItem("tema", root.dataset.theme); } catch (e) {}
+};
+
+caricaDati().then(DATI => { if (DATI) avvia(DATI); root.classList.add("pronto"); });
+
+// ---- formati ----
+const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+const GIORNI = ["domenica","lunedì","martedì","mercoledì","giovedì","venerdì","sabato"];
+const num = (v, d = 0) => v == null ? "–" : v.toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d });
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const $ = id => document.getElementById(id);
+const dt = s => new Date(s.replace(" ", "T") + ":00");
+const giornoCorto = s => { const [y, m, d] = s.slice(0, 10).split("-"); return `${+d} ${MESI[m - 1]}`; };
+// «oggi 06:30», «ieri 23:50», «domani 07:00», «8 ott 15:00»
+let ORA;
+function quando(s, conOra = true) {
+  if (!s) return "–";
+  const g = Math.round((dt(s.slice(0, 10) + " 12:00") - dt(ORA.slice(0, 10) + " 12:00")) / 864e5);
+  const giorno = g === 0 ? "oggi" : g === -1 ? "ieri" : g === 1 ? "domani" : giornoCorto(s);
+  return conOra && s.length > 10 ? `${giorno} ${s.slice(11, 16)}` : giorno;
+}
+function etichettaGiorno(g) {
+  const q = quando(g, false), d = dt(g + " 12:00");
+  return `${GIORNI[d.getDay()]} ${giornoCorto(g)}` + (q === "oggi" || q === "ieri" ? ` (${q})` : "");
+}
+const ore = (a, b) => (dt(b) - dt(a)) / 36e5;
+function durataDa(s) {
+  const h = ore(s, ORA);
+  if (h < 1) return "meno di un'ora";
+  if (h < 48) return `${Math.floor(h)} ${Math.floor(h) === 1 ? "ora" : "ore"}`;
+  return `${Math.floor(h / 24)} giorni`;
+}
+
+// ---- tooltip ----
+const tip = $("tip");
+function mostra(html, x, y) {
+  tip.innerHTML = html; tip.style.opacity = 1;
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.min(x + 14, innerWidth - r.width - 8) + "px";
+  tip.style.top = (y - r.height - 12 < 8 ? y + 16 : y - r.height - 12) + "px";
+}
+function nascondi() { tip.style.opacity = 0; }
+document.addEventListener("scroll", nascondi, { passive: true });
+
+// ---- grafici (SVG a mano, come la pagina Sport) ----
+const NS = "http://www.w3.org/2000/svg";
+function svg(el, w, h) {
+  el.innerHTML = "";
+  const s = document.createElementNS(NS, "svg");
+  s.setAttribute("viewBox", `0 0 ${w} ${h}`); s.setAttribute("height", h);
+  el.appendChild(s); return s;
+}
+function add(p, tag, attrs, testo) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (testo != null) e.textContent = testo;
+  p.appendChild(e); return e;
+}
+function tabellaDati(el, intest, righe) {
+  const d = document.createElement("details"); d.className = "dati";
+  d.innerHTML = `<summary>Tabella</summary><div class="table-wrap"><table><tr>${intest.map(h => `<th>${h}</th>`).join("")}</tr>${
+    righe.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</table></div>`;
+  el.closest(".card").appendChild(d);
+}
+const GRAFICI = [];
+function grafico(el, disegna) { GRAFICI.push([el, disegna]); disegna(el); }
+let attesa; addEventListener("resize", () => { clearTimeout(attesa); attesa = setTimeout(() => GRAFICI.forEach(([el, f]) => f(el)), 150); });
+
+// ---- stato di un giorno nella mappa: [fatti, previsti, esito] ----
+function cella(c, frequente) {
+  if (c == null) return ["nd", "nessun dato"];
+  const [n, a, e] = c;
+  if (e === "errore") return ["bad", "con errori"];
+  if (!a && !n) return ["np", "niente in programma"];
+  if (n === 0) return ["bad", a === 1 ? "saltato" : `saltati tutti i ${a} giri`];
+  if (frequente && n < a * 0.95) return ["warn", `${n} giri su ${a}: la rasp è stata spenta o senza rete per un po'`];
+  if (n < a) return ["warn", `${n} giri su ${a}`];
+  return ["ok", frequente ? `${n} giri su ${a}` : n > 1 ? `${n} giri` : "fatto" + (e === "ok" ? ", senza errori" : "")];
+}
+const ESITI = { ok: ["ok", "ok"], errore: ["bad", "errori"], saltato: ["bad", "saltato"], "in corso": ["", "in corso"] };
+
+function avvia(D) {
+  ORA = D.aggiornato;
+  const S = D.sistema, B = D.backup || {};
+  const d0 = dt(ORA);
+  $("aggiornato").textContent = `Situazione alle ${ORA.slice(11)} di ${GIORNI[d0.getDay()]} ${d0.getDate()} ${MESI[d0.getMonth()]}`;
+
+  // --- cose da guardare ---
+  const prob = [];   // [livello, testo]
+  const vecchio = (Date.now() - d0) / 36e5;
+  if (vecchio > 13) prob.push(["bad", `Dati vecchi di ${Math.floor(vecchio)} ore: la rasp potrebbe essere spenta o senza rete`]);
+  D.servizi.filter(s => s.atteso === "attivo" && s.stato !== "active").forEach(s => prob.push(["bad", `${esc(s.nome)} non è attivo (${s.stato})`]));
+  D.attivita.filter(a => a.esito === "errore" || a.esito === "saltato").forEach(a =>
+    prob.push(["bad", `${esc(a.nome)}: ${a.esito === "errore" ? "l'ultimo giro ha dato errori" : "l'ultimo giro previsto non è partito"}`]));
+  if (B.notte) {
+    if (B.notte.errori > 0) prob.push(["bad", `Backup notturno con ${B.notte.errori} errori`]);
+    else if (B.notte.errori == null) prob.push(["bad", "Backup notturno interrotto"]);
+    else if (ore(B.notte.inizio, ORA) > 30) prob.push(["bad", `Backup notturno fermo dal ${giornoCorto(B.notte.inizio)}`]);
+  }
+  if (B.immagine && ore(B.immagine.data + " 04:30", ORA) > 17 * 24) prob.push(["warn", `Immagine della microSD vecchia: ${giornoCorto(B.immagine.data)}`]);
+  if (B.pc && B.pc.ultimo_ok && ore(B.pc.ultimo_ok, ORA) > 48) prob.push(["warn", `Backup di Claude del PC fermo dal ${giornoCorto(B.pc.ultimo_ok)}`]);
+  if (S.disco.pct >= 85) prob.push(["bad", `Disco al ${S.disco.pct}%`]);
+  if (S.riavvio) prob.push(["warn", "Serve un riavvio per gli aggiornamenti"]);
+  if (S.throttled && S.throttled !== "0x0") prob.push(["warn", `Alimentazione o temperatura: throttled ${esc(S.throttled)}`]);
+  const nConfl = (B.conflitti || []).reduce((t, [, n]) => t + n, 0);
+  if (nConfl) prob.push(["warn", `${nConfl} ${nConfl === 1 ? "copia" : "copie"} di conflitto di OneDrive (${B.conflitti.map(([a, n]) => `${esc(a)}: ${n}`).join(", ")})`]);
+  const liv = prob.some(p => p[0] === "bad") ? "bad" : prob.length ? "warn" : "ok";
+  const r = $("riepilogo"); r.className = `card riepilogo ${liv}`;
+  r.innerHTML = `<div class="icona" aria-hidden="true">${liv === "ok" ? "✓" : "!"}</div><div><div class="titolo">${
+    liv === "ok" ? "Tutto a posto" : prob.length === 1 ? "Una cosa da guardare" : `${prob.length} cose da guardare`}</div>${
+    prob.length ? `<ul>${prob.map(p => `<li>${p[1]}</li>`).join("")}</ul>` : `<div class="sub" style="margin:0">Servizi attivi, attività pianificate regolari, backup di stanotte senza errori.</div>`}</div>`;
+
+  // --- riquadri ---
+  const tile = (label, valore, unita, note = "", extra = "") =>
+    `<div class="card tile"><div class="label">${label}</div><div class="value">${valore}${unita ? `<small>${unita}</small>` : ""}</div>${extra}${note ? `<div class="note">${note}</div>` : ""}</div>`;
+  const giorniAccesa = Math.floor(ore(S.avvio, ORA) / 24);
+  const bn = B.notte;
+  $("tiles").innerHTML =
+    tile("Accesa da", giorniAccesa >= 1 ? num(giorniAccesa) : num(Math.floor(ore(S.avvio, ORA))), giorniAccesa >= 1 ? (giorniAccesa === 1 ? "giorno" : "giorni") : "ore",
+      `dal ${quando(S.avvio)} · ${S.avvii30 === 1 ? "1 avvio" : S.avvii30 + " avvii"} in 30 giorni`) +
+    tile("Disco", num(S.disco.pct), "%", `${num(S.disco.usato, 1)} di ${num(S.disco.totale, 1)} GB`,
+      `<div class="barra" role="img" aria-label="Disco usato al ${S.disco.pct}%"><div style="width:${S.disco.pct}%"></div></div>`) +
+    tile("Temperatura", num(S.ora.temp, 1), "°C", `carico ${num(S.ora.carico, 2)}`) +
+    tile("Memoria", num(S.ora.ram, 1), "GB", `di ${num(S.ora.ram_tot, 1)} GB`,
+      `<div class="barra" role="img" aria-label="Memoria usata"><div style="width:${Math.round(S.ora.ram / S.ora.ram_tot * 100)}%"></div></div>`) +
+    tile("Backup notturno", bn ? (bn.errori === 0 ? "ok" : bn.errori == null ? "?" : num(bn.errori)) : "–", bn && bn.errori > 0 ? "errori" : "",
+      bn ? `${quando(bn.inizio)}${bn.fine ? ", " + Math.max(1, Math.round(ore(bn.inizio, bn.fine) * 60)) + " min" : ""}` : "");
+
+  // --- servizi ---
+  const servizio = s => {
+    let v;
+    if (s.stato === "active") v = `<span class="st ok">attivo</span><small>da ${durataDa(s.da)}${s.riavvii ? ` · ${s.riavvii} riavvii` : ""}</small>`;
+    else if (s.atteso !== "attivo") v = `<span class="st spento">spento</span><small>${esc(s.atteso)}</small>`;
+    else v = `<span class="st bad">${s.stato === "failed" ? "in errore" : s.stato === "activating" ? "in avvio" : "fermo"}</span>`;
+    const [nome, cosa] = s.nome.split(" · ");
+    return `<li><span class="k">${esc(nome)}${cosa ? `<small>${esc(cosa)}</small>` : ""}</span><span class="v">${v}</span></li>`;
+  };
+  $("l-bot").innerHTML = D.servizi.filter(s => s.gruppo === "bot").map(servizio).join("");
+  $("l-sistema").innerHTML = D.servizi.filter(s => s.gruppo !== "bot").map(servizio).join("");
+
+  // --- attività pianificate ---
+  $("t-attivita").innerHTML = `<tr><th>Attività</th><th>Ultimo giro</th><th>Esito</th><th>Prossimo</th></tr>` + D.attivita.map(a => {
+    const [cls, testo] = a.esito ? ESITI[a.esito] || ["", a.esito] : ["", "–"];
+    return `<tr><td>${esc(a.nome)}<small>${esc(a.quando)}</small></td><td class="nw">${a.ultimo ? quando(a.ultimo) : '<span class="muted">mai, finora</span>'}</td>` +
+      `<td class="nw">${a.esito ? `<span class="st ${cls}">${testo}</span>` : '<span class="muted">–</span>'}</td><td class="nw">${quando(a.prossimo)}</td></tr>`;
+  }).join("");
+
+  // mappa: attività × 30 giorni
+  const LEG = [["ok", "fatto"], ["warn", "in parte"], ["bad", "saltato o con errori"], ["np", "niente in programma"], ["nd", "nessun dato"]];
+  $("s-giri").innerHTML = LEG.map(([c, t]) => `<span><i style="${c === "nd" ? "border:1px solid var(--grid)" : `background:var(--${c === "np" ? "track" : c === "ok" ? "good" : c})`}"></i>${t}</span>`).join("");
+  const att = D.attivita, giorni = D.giorni;
+  grafico($("c-giri"), el => {
+    const W = el.clientWidth || 320, stretto = W < 560;
+    const nG = stretto ? 14 : giorni.length, gg = giorni.slice(-nG), off = giorni.length - nG;
+    const L = stretto ? 118 : 210, T = 18, gap = 2, cw = (W - L) / nG, ch = 18;
+    const s = svg(el, W, T + att.length * (ch + gap));
+    gg.forEach((g, i) => { if (i % (stretto ? 2 : 3) === (nG - 1) % (stretto ? 2 : 3)) add(s, "text", { x: L + i * cw + cw / 2, y: 11, "text-anchor": "middle" }, +g.slice(8)); });
+    att.forEach((a, r) => {
+      const y = T + r * (ch + gap);
+      let nome = a.nome; const max = stretto ? 17 : 30;
+      if (nome.length > max) nome = nome.slice(0, max - 1) + "…";
+      add(s, "text", { class: "lbl", x: L - 8, y: y + ch / 2 + 4, "text-anchor": "end" }, nome);
+      gg.forEach((g, i) => {
+        const [cls, testo] = cella(a.giorni[off + i], a.frequente);
+        const c = add(s, "rect", { class: `cell c-${cls}`, x: L + i * cw + gap / 2, y, width: Math.max(1, cw - gap), height: ch, rx: 2 });
+        c.addEventListener("pointermove", e => { c.classList.add("on"); mostra(`<b>${esc(a.nome)}</b><br>${etichettaGiorno(g)}<br>${testo}`, e.clientX, e.clientY); });
+        c.addEventListener("pointerleave", () => { c.classList.remove("on"); nascondi(); });
+      });
+    });
+  });
+  tabellaDati($("c-giri"), ["Giorno", ...att.map(a => esc(a.nome))], giorni.slice().reverse().map((g, j) => {
+    const i = giorni.length - 1 - j;
+    return [giornoCorto(g), ...att.map(a => cella(a.giorni[i], a.frequente)[1])];
+  }));
+
+  // --- backup ---
+  const vb = [];
+  if (bn) vb.push(["Backup notturno<small>quello che esiste solo sulla rasp, su OneDrive</small>",
+    `<span class="st ${bn.errori === 0 ? "ok" : "bad"}">${bn.errori === 0 ? "ok" : bn.errori == null ? "interrotto" : bn.errori + " errori"}</span><small>${quando(bn.inizio)}</small>`]);
+  if (B.immagine) vb.push(["Immagine della microSD<small>il 1 e il 15 del mese</small>",
+    `<span class="st ${B.immagine.ok ? "ok" : "bad"}">${B.immagine.ok ? "ok" : "da controllare"}</span><small>${quando(B.immagine.data)} · ${num(B.immagine.gb, 1)} GB</small>`]);
+  if (B.pc) vb.push(["Backup di Claude del PC<small>controllato ogni giorno alle 16</small>",
+    `<span class="st ${B.pc.errori === 0 ? "ok" : "warn"}">${B.pc.errori === 0 ? "ok" : B.pc.errori + " errori"}</span><small>${quando(B.pc.ultimo)}</small>`]);
+  vb.push(["Copie di conflitto di OneDrive", nConfl ? `<span class="st warn">${nConfl}</span><small>${B.conflitti.map(([a, n]) => `${esc(a)}: ${n}`).join(" · ")}</small>` : '<span class="st ok">nessuna</span>']);
+  $("l-backup").innerHTML = vb.map(([k, v]) => `<li><span class="k">${k}</span><span class="v">${v}</span></li>`).join("");
+
+  // --- sito e sistema ---
+  const vs = [
+    ["I miei libri<small>ogni notte alle 23:50, se cambia qualcosa</small>", quando(D.sito.libri)],
+    ["Sport<small>ogni mattina alle 08:30, se cambia qualcosa</small>", quando(D.sito.sport)],
+    ["Questa pagina<small>alle 9:15, 16:15 e 22:15, se cambia qualcosa</small>", quando(ORA)],
+    ["Riavvio per aggiornamenti", S.riavvio ? '<span class="st warn">serve</span>' : '<span class="st ok">non serve</span>'],
+    ["Alimentazione e temperatura<small>vcgencmd get_throttled</small>", S.throttled === "0x0" ? '<span class="st ok">ok</span>' : `<span class="st warn">${esc(S.throttled || "?")}</span>`],
+    ["Kernel", `<small>${esc(S.kernel)}</small>`],
+  ];
+  $("l-sito").innerHTML = vs.map(([k, v]) => `<li><span class="k">${k}</span><span class="v">${v}</span></li>`).join("");
+
+  // --- temperatura: linea sul tempo vero, interrotta dove mancano i controlli (la notte) ---
+  const P = (D.temp || []).map(([t, v]) => ({ t: dt(t).getTime(), s: t, v }));
+  grafico($("c-temp"), el => {
+    const W = el.clientWidth || 300, h = 170, L = 34, R = 10, B = 22, T = 12, s = svg(el, W, h);
+    if (P.length < 2) { add(s, "text", { x: L, y: h / 2 }, "Pochi dati: il grafico si riempie nei prossimi giorni"); return; }
+    const t1 = dt(ORA).getTime(), t0 = t1 - 7 * 864e5;
+    let lo = Math.min(...P.map(p => p.v)), hi = Math.max(...P.map(p => p.v));
+    lo = Math.floor(lo / 5) * 5 - (hi - lo < 4 ? 5 : 0); hi = Math.ceil(hi / 5) * 5 || lo + 5; if (hi === lo) hi += 5;
+    const ph = h - B - T, x = t => L + (t - t0) / (t1 - t0) * (W - L - R), y = v => T + ph - (v - lo) / (hi - lo) * ph;
+    for (let v = lo; v <= hi; v += 5) { add(s, "line", { class: v === lo ? "ax" : "gl", x1: L, x2: W - R, y1: y(v), y2: y(v) }); add(s, "text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, v); }
+    for (let k = 0; k <= 7; k++) {
+      const d = new Date(t1 - k * 864e5); d.setHours(0, 0, 0, 0);
+      if (d.getTime() > t0 && (W > 480 || k % 2 === 0)) add(s, "text", { x: x(d.getTime()), y: h - 6, "text-anchor": "middle" }, `${d.getDate()} ${MESI[d.getMonth()]}`);
+    }
+    let path = "";
+    P.forEach((p, i) => { path += `${i && p.t - P[i - 1].t < 12 * 36e5 ? "L" : "M"}${x(p.t)},${y(p.v)}`; });
+    add(s, "path", { class: "line", d: path });
+    const ult = P[P.length - 1]; add(s, "circle", { class: "dot", cx: x(ult.t), cy: y(ult.v), r: 4 });
+    const cross = add(s, "line", { class: "cross", y1: T, y2: T + ph, display: "none" });
+    const dot = add(s, "circle", { class: "dot", r: 4, display: "none" });
+    const hit = add(s, "rect", { class: "hit", x: L, y: 0, width: W - L - R, height: h });
+    hit.addEventListener("pointermove", e => {
+      const r = s.getBoundingClientRect(), px = (e.clientX - r.left) * W / r.width, tt = t0 + (px - L) / (W - L - R) * (t1 - t0);
+      const p = P.reduce((a, b) => Math.abs(b.t - tt) < Math.abs(a.t - tt) ? b : a);
+      cross.setAttribute("x1", x(p.t)); cross.setAttribute("x2", x(p.t)); cross.removeAttribute("display");
+      dot.setAttribute("cx", x(p.t)); dot.setAttribute("cy", y(p.v)); dot.removeAttribute("display");
+      mostra(`<b>${num(p.v, 1)} °C</b><br>${quando(p.s)}`, e.clientX, e.clientY);
+    });
+    hit.addEventListener("pointerleave", () => { cross.setAttribute("display", "none"); dot.setAttribute("display", "none"); nascondi(); });
+  });
+  tabellaDati($("c-temp"), ["Quando", "°C"], P.slice().reverse().map(p => [quando(p.s), num(p.v, 1)]));
+
+  // --- progetti ---
+  const PR = D.progetti || {};
+  const tipo = st => /^(attivo|in uso)/i.test(st) ? "attivo" : /fermo|pausa|archivio|eliminat/i.test(st) ? "fermo" : "altro";
+  const CLS = { attivo: "ok", altro: "", fermo: "spento" };
+  const FILTRI = [["tutti", "Tutti"], ["attivo", "Attivi"], ["altro", "A richiesta"], ["fermo", "Fermi"]];
+  let filtro = "tutti";
+  try { filtro = localStorage.getItem("rasp-filtro") || "tutti"; } catch (e) {}
+  function disegnaProgetti() {
+    $("filtri").innerHTML = FILTRI.map(([k, t]) => {
+      const n = (PR.gruppi || []).flatMap(g => g.righe).filter(r => k === "tutti" || tipo(r.stato) === k).length;
+      return `<button type="button" data-f="${k}" aria-pressed="${k === filtro}">${t} · ${n}</button>`;
+    }).join("");
+    $("progetti").innerHTML = (PR.gruppi || []).map(g => {
+      const righe = g.righe.filter(r => filtro === "tutti" || tipo(r.stato) === filtro);
+      if (!righe.length) return "";
+      return `<h3>${esc(g.nome)}</h3>` + righe.map(r =>
+        `<div class="prog"><span class="n">${esc(r.nome)}</span><span class="s"><span class="st ${CLS[tipo(r.stato)]}" style="white-space:normal">${esc(r.stato)}</span></span>` +
+        `<span class="c">${esc(r.cosa)}</span>${r.dove && r.dove !== "—" ? `<span class="d">Dove: ${esc(r.dove)}</span>` : ""}</div>`).join("");
+    }).join("") || '<p class="muted" style="margin:0">Nessun progetto in questo gruppo.</p>';
+    $("filtri").querySelectorAll("button").forEach(b => b.onclick = () => {
+      filtro = b.dataset.f; try { localStorage.setItem("rasp-filtro", filtro); } catch (e) {}
+      disegnaProgetti();
+    });
+  }
+  disegnaProgetti();
+  $("sub-progetti").textContent = PR.aggiornato ? `Elenco aggiornato il ${giornoCorto(PR.aggiornato)} ${PR.aggiornato.slice(0, 4)}` : "";
+}
+</script>
+</body>
+</html>
