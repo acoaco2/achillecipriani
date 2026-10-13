@@ -18,6 +18,7 @@ Sito statico su **GitHub Pages**, dominio `achillecipriani.it`, repository **pub
 
 | `/aco/sport` | «Sport»: corsa, apnea, gommone, skate e benessere (Garmin), solo aggregati | pagina `index.html` **qui**; `dati.json` **cifrato e generato** da `acoprogetti/GarminAco/pubblica_sito.py` (stesso `SITO_TOKEN` dei libri), ogni mattina dalla rasp. Non modificare `dati.json` a mano |
 | `/aco/rasp` | «Rasp»: stato della Raspberry (servizi, attività pianificate, backup) ed elenco dei progetti | pagina `index.html` **qui**; `dati.json` **cifrato e generato** dalla rasp alle 09:15, 16:15 e 22:15 (`~/.local/bin/pubblica-stato-rasp`, copia di riferimento in `acoprogetti/rasp/pubblica_stato.py`; stesso `SITO_TOKEN`), solo se cambia qualcosa. Non modificare `dati.json` a mano |
+| `/nonna` | «Conti della nonna»: sintesi del conto per la famiglia. Login dalla home con utente `nonna` (la password la sa Achille), che porta **dritto** alla pagina come la vecchia Logofarma, senza passare da `/aco`. Token proprio (`NONNA_TOKEN`), diverso da quello di `/aco` | pagina `index.html` (guscio vuoto) **qui**; `dati.json` **cifrato e generato** dal PC con `acoprogetti/conti nonna/pubblica_sito.py` a ogni estratto conto. Non modificare `dati.json` a mano |
 
 Prima di un push da qui fai `git pull --rebase`: la rasp committa `aco/libri/dati.json` ogni notte (`aco/sport/dati.json` ogni mattina, `aco/rasp/dati.json` fino a 3 volte al giorno).
 

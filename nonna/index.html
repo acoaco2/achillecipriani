@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Area riservata</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+  .blocco { font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #1b1a17; background: #faf8f3;
+            min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; box-sizing: border-box; text-align: center; }
+  .blocco a { color: #1f5d63; }
+  .esci { font: 13px system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; margin: 0; padding: 0 16px 32px; }
+  .esci button { font: inherit; background: none; border: 0; padding: 8px; color: inherit; opacity: .7; text-decoration: underline; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="blocco" id="blocco" hidden><p>Area riservata. <a href="/">Accedi dalla pagina iniziale</a>.</p></div>
+
+<script>
+  /*
+    Come la vecchia pagina Logofarma: il login della home rimanda qui con il token
+    nel frammento (#k=...). Il token va in sessionStorage e sparisce subito
+    dall'indirizzo. Il contenuto (dati.json) è cifrato con quel token
+    (PBKDF2 250.000 + AES-GCM) ed è generato da acoprogetti/conti nonna/pubblica_sito.py.
+    Non modificare dati.json a mano.
+  */
+  (async function () {
+    var CHIAVE = "nonna-k";
+    var m = location.hash.match(/[#&]k=([^&]+)/);
+    try { if (m) sessionStorage.setItem(CHIAVE, decodeURIComponent(m[1])); } catch (e) {}
+    if (m) history.replaceState(null, "", location.pathname);
+    // un nuovo #k=... sulla stessa pagina non la ricarica: lo fa qui
+    window.addEventListener("hashchange", function () { location.reload(); });
+
+    function bloccato() { document.getElementById("blocco").hidden = false; }
+
+    var k = null;
+    try { k = sessionStorage.getItem(CHIAVE); } catch (e) {}
+    if (!k || !window.crypto || !crypto.subtle) return bloccato();
+    try {
+      var c = await fetch("dati.json", { cache: "no-store" }).then(function (r) { return r.json(); });
+      var b = function (s) { return Uint8Array.from(atob(s), function (x) { return x.charCodeAt(0); }); };
+      var km = await crypto.subtle.importKey("raw", new TextEncoder().encode(k), "PBKDF2", false, ["deriveKey"]);
+      var key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b(c.salt), iterations: c.iterations, hash: "SHA-256" },
+        km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+      var pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b(c.iv) }, key, b(c.ct));
+      var d = JSON.parse(new TextDecoder().decode(pt));
+    } catch (e) { return bloccato(); }
+
+    document.title = d.titolo;
+    var st = document.createElement("style");
+    st.textContent = d.stile;
+    document.head.appendChild(st);
+    document.getElementById("blocco").remove();
+    document.body.insertAdjacentHTML("afterbegin", d.corpo);
+
+    var root = document.querySelector(".viz-root") || document.body;
+    var esci = document.createElement("p");
+    esci.className = "esci";
+    esci.innerHTML = '<button type="button">Esci</button>';
+    esci.querySelector("button").addEventListener("click", function () {
+      try { sessionStorage.removeItem(CHIAVE); } catch (e) {}
+      location.href = "/";
+    });
+    root.appendChild(esci);
+  })();
+</script>
+</body>
+</html>
