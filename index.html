@@ -185,7 +185,7 @@
       </div>
       <div class="panel-contact">
         <span class="contact-label">Contatti</span>
-        <a href="#" id="mailLink" data-u="contatti" data-d="achillecipriani.it">Scrivimi una mail</a>
+        <a id="mailLink" data-u="contatti" data-d="achillecipriani.it"></a>
       </div>
     </section>
 
@@ -319,17 +319,14 @@
 
   /*
     CONTATTI ANTI-SPAM
-    L'indirizzo non è scritto nella pagina: si compone al clic, così i bot
-    che leggono l'HTML non lo trovano. Dopo il clic resta visibile, per chi
-    vuole copiarlo invece di aprire il programma di posta.
+    L'indirizzo non è scritto nell'HTML: lo compone questo script all'apertura
+    della pagina, così i bot che leggono solo il sorgente non lo trovano.
   */
   (function () {
     var link = document.getElementById("mailLink");
-    link.addEventListener("click", function () {
-      var addr = link.dataset.u + "@" + link.dataset.d;
-      link.href = "mailto:" + addr;
-      link.textContent = addr;
-    });
+    var addr = link.dataset.u + "@" + link.dataset.d;
+    link.href = "mailto:" + addr;
+    link.textContent = addr;
   })();
 </script>
 </body>
