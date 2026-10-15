@@ -186,17 +186,19 @@ footer { margin-top: 48px; color: var(--muted); font-size: 12px; }
   <div class="card progetti" id="progetti"></div>
   <div class="sub" id="sub-progetti" style="margin-top:8px"></div>
 
-  <footer>Dati raccolti dalla rasp tre volte al giorno, alle 9:15, 16:15 e 22:15; la pagina si aggiorna solo quando cambia qualcosa. I giri delle attività vengono dal journal di sistema, gli esiti dai loro log. Progetti dalla nota «Progetti acodev» di Obsidian.</footer>
+  <footer>Dati raccolti dalla rasp tre volte al giorno, alle 9:15, 16:15 e 22:15; la pagina si aggiorna solo quando cambia qualcosa e, se è aperta, si ricarica da sola. I giri delle attività vengono dal journal di sistema, gli esiti dai loro log. Progetti dalla nota «Progetti acodev» di Obsidian.</footer>
 </main>
 <div class="tip" id="tip" role="tooltip"></div>
 
 <script>
+let CT = null;   // testo cifrato caricato, per accorgersi quando dati.json cambia
 async function caricaDati() {
   let k = null;
   try { k = sessionStorage.getItem("aco-k"); } catch (e) {}
   if (!k || !window.crypto || !crypto.subtle) return bloccato();
   try {
     const CIFRATO = await fetch("dati.json", { cache: "no-store" }).then(r => r.json());
+    CT = CIFRATO.ct;
     const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
     const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(k), "PBKDF2", false, ["deriveKey"]);
     const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b(CIFRATO.salt), iterations: CIFRATO.iterations, hash: "SHA-256" },
@@ -219,7 +221,26 @@ document.getElementById("tema").onclick = () => {
   try { localStorage.setItem("tema", root.dataset.theme); } catch (e) {}
 };
 
-caricaDati().then(DATI => { if (DATI) avvia(DATI); root.classList.add("pronto"); });
+caricaDati().then(DATI => { if (DATI) { avvia(DATI); autoAggiorna(); } root.classList.add("pronto"); });
+
+// ---- aggiornamento automatico: ogni 5 minuti (e quando si torna sulla scheda) controlla se dati.json
+// è cambiato e in quel caso ricarica; dopo un'ora ricarica comunque, per rifare il controllo «dati vecchi» ----
+const APERTA = Date.now();
+function autoAggiorna() {
+  let inCorso = false;
+  async function controlla() {
+    if (document.hidden || inCorso) return;
+    if (Date.now() - APERTA > 36e5) return location.reload();
+    inCorso = true;
+    try {
+      const nuovo = await fetch("dati.json", { cache: "no-store" }).then(r => r.json());
+      if (nuovo.ct && nuovo.ct !== CT) location.reload();
+    } catch (e) {}
+    inCorso = false;
+  }
+  setInterval(controlla, 5 * 60e3);
+  document.addEventListener("visibilitychange", controlla);
+}
 
 // ---- formati ----
 const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
