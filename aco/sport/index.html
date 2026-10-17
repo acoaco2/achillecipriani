@@ -432,7 +432,7 @@ function avvia(D) {
   // --- apnea ---
   $("tiles-apnea").innerHTML =
     tile("Tuffi nel " + ANNO, num(A.ytd.tuffi), "", delta(A.ytd.tuffi, A.prev.tuffi, "")) +
-    tile("Sessioni", num(A.ytd.sessioni), "", delta(A.ytd.sessioni, A.prev.sessioni, "")) +
+    tile("Sessioni", num(A.ytd.sessioni), "", delta(A.ytd.sessioni, A.prev.sessioni, ""), A.ytd.pesca ? `di cui ${A.ytd.pesca} di pesca` : "") +
     tile("Più profondo dell'anno", num(A.ytd.prof, 1), "m", delta(A.ytd.prof, A.prev.prof, " m", 1)) +
     tile("Ultima sessione", num(A.ultima?.tuffi), "tuffi", "", `${data(A.ultima?.data)} · fino a ${num(A.ultima?.prof, 1)} m`);
   colonne($("c-apnea-mesi"), A.mesi.map(m => ({ x: m.mese, v: m.tuffi, tip: m.tuffi ? `<b>${m.tuffi} tuffi</b><br>${mese(m.mese)} · fino a ${num(m.prof, 1)} m` : `${mese(m.mese)}<br>nessun tuffo` })),
@@ -447,8 +447,8 @@ function avvia(D) {
   if (A.record.fondo) va.push(["Tuffo più lungo", `${Math.floor(A.record.fondo.sec / 60)}'${String(A.record.fondo.sec % 60).padStart(2, "0")}" · ${data(A.record.fondo.data)}`]);
   va.push(["Metri totali nel " + ANNO, `${num(A.ytd.metri)} m (${num(A.prev.metri)} m nel ${ANNO - 1})`]);
   lista($("l-apnea"), va);
-  tabella($("t-apnea"), ["Anno", "Sessioni", "Tuffi", "Più profondo", "Metri totali"],
-    A.anni.slice().reverse().map(a => [a.anno, a.sessioni, a.tuffi, num(a.prof, 1) + " m", num(a.metri) + " m"]), ANNO);
+  tabella($("t-apnea"), ["Anno", "Sessioni", "di cui pesca", "Tuffi", "Più profondo", "Metri totali"],
+    A.anni.slice().reverse().map(a => [a.anno, a.sessioni, a.pesca ?? "–", a.tuffi, num(a.prof, 1) + " m", num(a.metri) + " m"]), ANNO);
 
   // --- gommone e skate ---
   for (const [id, X] of [["gommone", G], ["skate", S]]) {
