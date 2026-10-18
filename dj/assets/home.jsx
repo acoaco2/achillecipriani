@@ -1,13 +1,32 @@
 // Home / intro page for Dj Aco
 
+// Data in formato AAAA-MM-GG: giorno della settimana e mese si ricavano da
+// soli, e il giorno dopo la serata sparisce dalla home.
 const GIGS = [
-  { date: "27 OTT", day: "MAR", venue: "Serata Privata", city: "Club Salute", note: "Private event" },
+  { date: "2026-10-27", venue: "Serata Privata", city: "Club Salute", note: "Private event" },
 ];
+
+const MONTHS = ["GEN", "FEB", "MAR", "APR", "MAG", "GIU", "LUG", "AGO", "SET", "OTT", "NOV", "DIC"];
+const WEEKDAYS = ["DOM", "LUN", "MAR", "MER", "GIO", "VEN", "SAB"];
+
+function upcomingGigs() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return GIGS
+    .map(g => {
+      const [y, m, d] = g.date.split("-").map(Number);
+      return { ...g, when: new Date(y, m - 1, d) };
+    })
+    .filter(g => g.when >= today)
+    .sort((a, b) => a.when - b.when)
+    .map(g => ({ ...g, day: WEEKDAYS[g.when.getDay()], label: g.when.getDate() + " " + MONTHS[g.when.getMonth()] }));
+}
 
 const GENRES = ["House", "Tech House", "Italodisco", "New Wave", "Punk / Rock", "Ska"];
 
 function HomePage({ navigate, djName, bio }) {
   const [qrOpen, setQrOpen] = React.useState(false);
+  const gigs = upcomingGigs();
   const [pwOpen, setPwOpen] = React.useState(false);
   const [pw, setPw] = React.useState("");
   const [shake, setShake] = React.useState(false);
@@ -174,90 +193,92 @@ function HomePage({ navigate, djName, bio }) {
         </div>
       </section>
 
-      <div className="groove" style={{ margin: "0 20px" }}/>
+      {gigs.length > 0 && (<>
+        <div className="groove" style={{ margin: "0 20px" }}/>
 
-      {/* UPCOMING GIGS */}
-      <section style={{ padding: "28px 20px" }} data-screen-label="Home · Gigs">
-        <div className="between" style={{ marginBottom: 12 }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.2em", color: "var(--mute)" }}>
-            § A02 — LIVE DATES
+        {/* UPCOMING GIGS */}
+        <section style={{ padding: "28px 20px" }} data-screen-label="Home · Gigs">
+          <div className="between" style={{ marginBottom: 12 }}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.2em", color: "var(--mute)" }}>
+              § A02 — LIVE DATES
+            </div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--orange-deep)" }}>
+              ● {gigs.length} UPCOMING
+            </div>
           </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--orange-deep)" }}>
-            ● {GIGS.length} UPCOMING
-          </div>
-        </div>
-        <h2 className="display" style={{ fontSize: 28, margin: "0 0 18px" }}>
-          Prossime date
-        </h2>
+          <h2 className="display" style={{ fontSize: 28, margin: "0 0 18px" }}>
+            Prossime date
+          </h2>
 
-        <div className="stack" style={{ "--s": "10px" }}>
-          {GIGS.map((g, i) => (
-            <div key={i} style={{
-              display: "flex",
-              gap: 14,
-              alignItems: "stretch",
-              background: "var(--paper)",
-              border: "1.5px solid var(--ink)",
-              borderRadius: 12,
-              padding: 14,
-              position: "relative",
-              overflow: "hidden",
-            }}>
-              {/* Date block */}
-              <div style={{
-                flexShrink: 0,
-                width: 64,
-                textAlign: "center",
-                borderRight: "1.5px dashed var(--ink)",
-                paddingRight: 14,
+          <div className="stack" style={{ "--s": "10px" }}>
+            {gigs.map((g, i) => (
+              <div key={i} style={{
                 display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
+                gap: 14,
+                alignItems: "stretch",
+                background: "var(--paper)",
+                border: "1.5px solid var(--ink)",
+                borderRadius: 12,
+                padding: 14,
+                position: "relative",
+                overflow: "hidden",
               }}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--mute)", letterSpacing: "0.1em" }}>
-                  {g.day}
+                {/* Date block */}
+                <div style={{
+                  flexShrink: 0,
+                  width: 64,
+                  textAlign: "center",
+                  borderRight: "1.5px dashed var(--ink)",
+                  paddingRight: 14,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                }}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--mute)", letterSpacing: "0.1em" }}>
+                    {g.day}
+                  </div>
+                  <div className="display" style={{ fontSize: 18, lineHeight: 1.1, marginTop: 2 }}>
+                    {g.label}
+                  </div>
                 </div>
-                <div className="display" style={{ fontSize: 18, lineHeight: 1.1, marginTop: 2 }}>
-                  {g.date}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: "var(--font-display)", fontSize: 16, lineHeight: 1.2, marginBottom: 4 }}>
+                    {g.venue}
+                  </div>
+                  <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 6 }}>
+                    {g.city}
+                  </div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--mute)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                    {g.note}
+                  </div>
                 </div>
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: "var(--font-display)", fontSize: 16, lineHeight: 1.2, marginBottom: 4 }}>
-                  {g.venue}
-                </div>
-                <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 6 }}>
-                  {g.city}
-                </div>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--mute)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                  {g.note}
-                </div>
-              </div>
-              <div style={{
-                position: "absolute",
-                right: -20, top: -20,
-                width: 60, height: 60,
-                borderRadius: "50%",
-                background: i === 0 ? "var(--orange)" : "transparent",
-                border: i === 0 ? "none" : "1.5px dashed var(--ink)",
-                opacity: i === 0 ? 1 : 0.3,
-              }}/>
-              {i === 0 && (
                 <div style={{
                   position: "absolute",
-                  right: 8, top: 8,
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 9,
-                  fontWeight: 700,
-                  letterSpacing: "0.1em",
-                  color: "var(--ink)",
-                }}>
-                  NEXT
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
+                  right: -20, top: -20,
+                  width: 60, height: 60,
+                  borderRadius: "50%",
+                  background: i === 0 ? "var(--orange)" : "transparent",
+                  border: i === 0 ? "none" : "1.5px dashed var(--ink)",
+                  opacity: i === 0 ? 1 : 0.3,
+                }}/>
+                {i === 0 && (
+                  <div style={{
+                    position: "absolute",
+                    right: 8, top: 8,
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    letterSpacing: "0.1em",
+                    color: "var(--ink)",
+                  }}>
+                    NEXT
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      </>)}
 
       {/* FOOTER */}
       <footer style={{
