@@ -22,7 +22,6 @@ function useHashRoute() {
 
 const STORAGE_KEY = "dj_aco_requests_v1";
 const PIN_KEY = "dj_aco_pin";
-const DAY_MS = 86400000;
 
 const SB = (() => {
   const cfg = window.DJ_CONFIG || {};
@@ -102,7 +101,6 @@ function useRequestStore() {
       const { data, error } = await SB
         .from("requests")
         .select("*")
-        .gte("ts", Date.now() - DAY_MS)
         .order("ts", { ascending: false });
       if (error) { setOnline(false); return; }
       setRequests(data.map(rowToReq));
@@ -149,11 +147,9 @@ function useRequestStore() {
 
     if (!SB) {
       const now = Date.now();
-      const todayStr = new Date().toDateString();
       const existing = requests.find(r =>
         r.title.toLowerCase() === track.title.toLowerCase() &&
         r.artist.toLowerCase() === track.artist.toLowerCase() &&
-        new Date(r.ts).toDateString() === todayStr &&
         r.status !== "played"
       );
       if (existing) {

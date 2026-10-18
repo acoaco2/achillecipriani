@@ -106,7 +106,6 @@ begin
   where lower(r.title)  = lower(v_title)
     and lower(r.artist) = lower(v_artist)
     and r.status <> 'played'
-    and r.ts >= v_now - 86400000
   order by r.ts desc
   limit 1;
 

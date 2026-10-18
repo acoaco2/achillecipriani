@@ -11,10 +11,9 @@ function RequestPage({ navigate, store }) {
   const inputRef = React.useRef(null);
 
   const playedKeys = React.useMemo(() => {
-    const todayStr = new Date().toDateString();
     return new Set(
       store.requests
-        .filter(r => r.status === "played" && new Date(r.ts).toDateString() === todayStr)
+        .filter(r => r.status === "played")
         .map(r => r.title.toLowerCase() + "§" + r.artist.toLowerCase())
     );
   }, [store.requests]);
@@ -34,9 +33,7 @@ function RequestPage({ navigate, store }) {
   }, [query, catalog, playedKeys]);
 
   const todayTop = React.useMemo(() => {
-    const todayStr = new Date().toDateString();
-    return store.requests
-      .filter(r => new Date(r.ts).toDateString() === todayStr)
+    return [...store.requests]
       .sort((a, b) => b.votes - a.votes)
       .slice(0, 5);
   }, [store.requests]);
@@ -192,11 +189,11 @@ function RequestPage({ navigate, store }) {
           ) : (
             <>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.15em", color: "var(--mute)", margin: "14px 0 8px" }}>
-                CLASSIFICA DEL GIORNO
+                CLASSIFICA DELLA SERATA
               </div>
               {todayTop.length === 0 ? (
                 <div style={{ padding: "20px 0", color: "var(--mute)", fontSize: 12, fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
-                  Nessuna richiesta ancora oggi.
+                  Nessuna richiesta ancora.
                 </div>
               ) : (
                 <DayChart entries={todayTop}/>

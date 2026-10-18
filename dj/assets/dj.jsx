@@ -23,10 +23,11 @@ function MonitorPage({ store, navigate }) {
     catch (e) { setActionError(e.message || "operazione non riuscita"); }
   };
 
-  const todayStr = new Date(now).toDateString();
-  const todayAll = store.requests.filter(r => new Date(r.ts).toDateString() === todayStr);
-  const top    = todayAll.filter(r => r.status !== "played").sort((a, b) => b.votes - a.votes).slice(0, 5);
-  const played = todayAll.filter(r => r.status === "played").sort((a, b) => b.votes - a.votes);
+  // Nessun filtro per data: le richieste restano finche' il dj non preme RESET
+  // dopo la serata (cosi' si possono raccogliere anche nei giorni prima).
+  const top    = store.requests.filter(r => r.status !== "played").sort((a, b) => b.votes - a.votes).slice(0, 5);
+  const played = store.requests.filter(r => r.status === "played").sort((a, b) => b.votes - a.votes);
+  const allIds = store.requests.map(r => r.id);
 
   const [confirmReset, setConfirmReset] = React.useState(false);
   const medals = ["var(--orange)", "#aaaaaa", "#cd7f32"];
@@ -35,7 +36,7 @@ function MonitorPage({ store, navigate }) {
     const dateStr = new Date().toLocaleDateString("it-IT");
     const q = (s) => `"${String(s).replace(/"/g, '""')}"`;
     const rows = [["orario", "nome", "artista", "titolo"].map(q).join(",")];
-    [...top, ...played]
+    store.requests
       .flatMap(r => (r.voteLog || [{ ts: r.ts, requester: r.requester }]).map(v => ({ ...v, title: r.title, artist: r.artist })))
       .sort((a, b) => a.ts - b.ts)
       .forEach(v => {
@@ -67,7 +68,7 @@ function MonitorPage({ store, navigate }) {
             onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.35)"}
           >← home</button>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", color: "var(--orange)", marginBottom: 6 }}>
-            ● CLASSIFICA DEL GIORNO
+            ● CLASSIFICA DELLA SERATA
           </div>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 52, lineHeight: 0.9 }}>
             Top 5<span style={{ color: "var(--orange)" }}>.</span>
@@ -137,7 +138,7 @@ function MonitorPage({ store, navigate }) {
       {/* Top 5 */}
       {top.length === 0 ? (
         <div style={{ marginTop: 80, textAlign: "center", fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--cream-2)", letterSpacing: "0.1em" }}>
-          Nessuna richiesta ancora oggi.
+          Nessuna richiesta ancora.
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -194,18 +195,18 @@ function MonitorPage({ store, navigate }) {
             borderRadius: 14, padding: "28px 32px", textAlign: "center", minWidth: 260,
           }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--cream)", marginBottom: 20, letterSpacing: "0.05em" }}>
-              Vuoi esportare la classifica?
+              Il reset cancella tutte le richieste.<br/>Vuoi prima esportarle?
             </div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
               <button
-                onClick={() => { exportCsv(); run(() => store.removeMany(top.map(r => r.id))); setConfirmReset(false); }}
+                onClick={() => { exportCsv(); run(() => store.removeMany(allIds)); setConfirmReset(false); }}
                 style={{
                   background: "var(--orange)", border: "none", borderRadius: 8,
                   padding: "8px 22px", fontFamily: "var(--font-mono)", fontSize: 11,
                   letterSpacing: "0.1em", color: "var(--ink)", cursor: "pointer",
                 }}>SÌ</button>
               <button
-                onClick={() => { run(() => store.removeMany(top.map(r => r.id))); setConfirmReset(false); }}
+                onClick={() => { run(() => store.removeMany(allIds)); setConfirmReset(false); }}
                 style={{
                   background: "transparent", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 8,
                   padding: "8px 22px", fontFamily: "var(--font-mono)", fontSize: 11,
@@ -302,6 +303,10 @@ function PreflightMemo() {
               <span className="dot live"/>LIVE
             </span>{" "}
             le richieste dai telefoni stanno arrivando. Se è rossa (OFFLINE o SOLO QUESTO PC), no.
+          </>)}
+          {item("03", <>
+            <strong style={{ color: "var(--cream)", fontWeight: 600 }}>Dopo la serata premi RESET.</strong>{" "}
+            Le richieste non scadono da sole: restano in classifica finché non le azzeri, e il reset propone prima di esportarle.
           </>)}
         </ol>
       )}
