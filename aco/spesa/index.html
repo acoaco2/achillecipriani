@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spesa</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&display=swap" rel="stylesheet">
+<!--
+  I dati (dati.json) sono cifrati e li scrive il PC dopo ogni spesa:
+  acodev/spesa_Esselunga/pubblica_sito.py. Questa pagina si modifica qui.
+-->
+<style>
+:root {
+  color-scheme: light;
+  --page: #faf8f3; --surface: #fffefa; --ink: #1b1a17; --ink-2: #4f4b42; --muted: #706b5e;
+  --grid: #ebe6da; --axis: #d9d4c7; --border: rgba(27,26,23,0.12);
+  --series: #1f5d63; --series-hover: #123f44; --track: #ebe6da;
+  --good: #2e7d4f; --warn: #9a5b00; --bad: #9a4b3f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0e1615; --surface: #152120; --ink: #f3f1ea; --ink-2: #c9d6d3; --muted: #8f9a97;
+    --grid: #22302e; --axis: #2f3f3d; --border: rgba(255,255,255,0.10);
+    --series: #8fd4c8; --series-hover: #cfeee8; --track: #22302e;
+    --good: #6cc28a; --warn: #e0b04a; --bad: #e08b7d;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0e1615; --surface: #152120; --ink: #f3f1ea; --ink-2: #c9d6d3; --muted: #8f9a97;
+  --grid: #22302e; --axis: #2f3f3d; --border: rgba(255,255,255,0.10);
+  --series: #8fd4c8; --series-hover: #cfeee8; --track: #22302e;
+  --good: #6cc28a; --warn: #e0b04a; --bad: #e08b7d;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 64px; visibility: hidden; }
+.pronto main { visibility: visible; }
+header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+h1 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 300; font-size: clamp(2.2rem, 6vw, 3rem); letter-spacing: 0.01em; margin: 0; }
+h2 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 500; font-size: 1.6rem; margin: 48px 0 12px; }
+h3 { font-size: 14px; font-weight: 600; margin: 0 0 2px; }
+.indietro { display: inline-block; font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--series); text-decoration: none; margin-bottom: 14px; }
+.indietro:hover { text-decoration: underline; }
+.sub { color: var(--ink-2); font-size: 13px; margin: 0 0 12px; }
+.muted { color: var(--muted); }
+button.theme { background: none; border: 1px solid var(--border); color: var(--ink-2); border-radius: 8px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; min-height: 32px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-width: 0; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.tile .label { color: var(--ink-2); font-size: 13px; }
+.tile .value { font-size: 34px; font-weight: 600; line-height: 1.15; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.tile .value small { font-size: 15px; font-weight: 500; color: var(--ink-2); margin-left: 3px; }
+.tile .note { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 12px; margin-top: 12px; }
+.chart { position: relative; margin-top: 8px; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.chart text.lbl { fill: var(--ink-2); font-variant-numeric: normal; }
+.chart text.val { fill: var(--ink-2); font-weight: 600; }
+.chart .gl { stroke: var(--grid); stroke-width: 1; }
+.chart .ax { stroke: var(--axis); stroke-width: 1; }
+.chart .bar { fill: var(--series); }
+.chart .bar.on { fill: var(--series-hover); }
+.chart .hit { fill: transparent; }
+.tip { position: fixed; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12); opacity: 0; transition: opacity .1s; z-index: 10; max-width: 260px; }
+.tip b { font-weight: 600; }
+details.dati { margin-top: 10px; font-size: 12.5px; }
+details.dati summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+details.dati .table-wrap { max-height: 260px; overflow: auto; margin-top: 6px; }
+.table-wrap { overflow-x: auto; }
+.table-wrap.alta { max-height: 520px; overflow: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); }
+th { color: var(--ink-2); font-weight: 600; white-space: nowrap; position: sticky; top: 0; background: var(--surface); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td .cat { display: block; color: var(--muted); font-size: 12px; }
+.prov { color: var(--warn); font-size: 12px; white-space: nowrap; }
+.cerca { width: 100%; max-width: 320px; font: inherit; font-size: 14px; color: var(--ink); background: var(--page); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; margin: 6px 0 4px; min-height: 36px; }
+.cerca:focus-visible { outline: 2px solid var(--series); outline-offset: 1px; }
+.lista { list-style: none; margin: 8px 0 0; padding: 0; }
+.lista li { padding: 7px 0; border-bottom: 1px solid var(--grid); display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; }
+.lista li:last-child { border-bottom: 0; }
+.lista .k { color: var(--ink-2); }
+.lista .v { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.su { color: var(--bad); } .giu { color: var(--good); }
+.vuoto { color: var(--muted); font-size: 13.5px; margin: 8px 0 0; }
+.blocco { margin-top: 20vh; text-align: center; color: var(--ink-2); font-size: 15px; }
+.blocco a { color: var(--series); }
+footer { margin-top: 48px; color: var(--muted); font-size: 12px; }
+@media (max-width: 520px) { .tile .value { font-size: 28px; } h2 { margin-top: 36px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <a class="indietro" href="../">← Area personale</a>
+      <h1>Spesa</h1>
+      <div class="sub" id="aggiornato"></div>
+    </div>
+    <button class="theme" id="tema" type="button">Tema</button>
+  </header>
+
+  <section class="tiles" id="tiles" aria-label="In sintesi"></section>
+
+  <h2>Dove vanno i soldi</h2>
+  <div class="grid2">
+    <div class="card"><h3>Spesa per mese</h3><div class="sub">Per data di consegna</div><div class="chart" id="c-mesi"></div></div>
+    <div class="card"><h3>Per categoria</h3><div class="sub" id="sub-cat"></div><div class="chart" id="c-cat"></div></div>
+  </div>
+
+  <h2>Le spese</h2>
+  <div class="card"><div class="table-wrap"><table id="t-spese"></table></div></div>
+
+  <h2>Prodotti</h2>
+  <div class="card">
+    <h3>Cosa compro e ogni quanto</h3>
+    <div class="sub">In cima i prodotti presi più volte. «Ogni» è la media dei giorni fra una spesa e l'altra in cui c'era quel prodotto.</div>
+    <input class="cerca" id="cerca" type="search" placeholder="Cerca un prodotto o una categoria" aria-label="Cerca un prodotto">
+    <div class="table-wrap alta"><table id="t-prodotti"></table></div>
+  </div>
+
+  <h2>Prezzi che cambiano</h2>
+  <div class="card">
+    <h3>Prezzo pieno, prima e ultima volta</h3>
+    <div class="sub">Senza le promozioni</div>
+    <ul class="lista" id="l-prezzi"></ul>
+  </div>
+
+  <footer>Dati dagli ordini di Esselunga Spesa Online, aggiornati dopo ogni spesa. Una spesa segnata «provvisoria» non è ancora stata consegnata: frutta, verdura, pesce, carne e pane sono a peso e il prezzo finale può cambiare. Il risparmio conta solo gli sconti delle promozioni.</footer>
+</main>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+async function caricaDati() {
+  let k = null;
+  try { k = sessionStorage.getItem("aco-k"); } catch (e) {}
+  if (!k || !window.crypto || !crypto.subtle) return bloccato();
+  try {
+    const CIFRATO = await fetch("dati.json", { cache: "no-store" }).then(r => r.json());
+    const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(k), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b(CIFRATO.salt), iterations: CIFRATO.iterations, hash: "SHA-256" },
+      km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b(CIFRATO.iv) }, key, b(CIFRATO.ct));
+    return JSON.parse(new TextDecoder().decode(pt));
+  } catch (e) { return bloccato(); }
+}
+function bloccato() {
+  document.querySelector("main").innerHTML = '<p class="blocco">Area riservata. <a href="/">Accedi dalla pagina iniziale</a>.</p>';
+  return null;
+}
+
+// ---- tema ----
+const root = document.documentElement;
+try { const t = localStorage.getItem("tema"); if (t) root.dataset.theme = t; } catch (e) {}
+document.getElementById("tema").onclick = () => {
+  const scuro = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = scuro ? "light" : "dark";
+  try { localStorage.setItem("tema", root.dataset.theme); } catch (e) {}
+};
+
+caricaDati().then(DATI => { if (DATI) avvia(DATI); root.classList.add("pronto"); });
+
+// ---- formati ----
+const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+const num = (v, d = 0) => v == null ? "–" : v.toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d });
+const euro = v => v == null ? "–" : num(v, 2) + " €";
+const data = (s, anno = true) => { if (!s) return "–"; const [y, m, d] = s.split("-"); return `${+d} ${MESI[m - 1]}${anno ? " " + y : ""}`; };
+const mese = s => { const [y, m] = s.split("-"); return `${MESI[m - 1]} ${y}`; };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const $ = id => document.getElementById(id);
+
+// ---- tooltip ----
+const tip = $("tip");
+function mostra(html, x, y) {
+  tip.innerHTML = html; tip.style.opacity = 1;
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.min(x + 14, innerWidth - r.width - 8) + "px";
+  tip.style.top = (y - r.height - 12 < 8 ? y + 16 : y - r.height - 12) + "px";
+}
+function nascondi() { tip.style.opacity = 0; }
+document.addEventListener("scroll", nascondi, { passive: true });
+
+// ---- grafici (SVG a mano, come Sport) ----
+const NS = "http://www.w3.org/2000/svg";
+function svg(el, w, h) {
+  el.innerHTML = "";
+  const s = document.createElementNS(NS, "svg");
+  s.setAttribute("viewBox", `0 0 ${w} ${h}`); s.setAttribute("height", h);
+  el.appendChild(s); return s;
+}
+function add(p, tag, attrs, testo) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (testo != null) e.textContent = testo;
+  p.appendChild(e); return e;
+}
+function tacche(max, n = 4) {
+  if (max <= 0) return [0, 1];
+  const grezzo = max / n, p = 10 ** Math.floor(Math.log10(grezzo));
+  const passo = [1, 2, 5, 10].map(f => f * p).find(f => f >= grezzo);
+  const out = []; for (let v = 0; v <= max + passo * 0.001; v += passo) out.push(+v.toFixed(6));
+  if (out[out.length - 1] < max) out.push(out[out.length - 1] + passo);
+  return out;
+}
+function colonna(p, x, y, w, h, cls) {
+  const r = Math.min(4, w / 2, h);
+  return add(p, "path", { class: cls, d: `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z` });
+}
+function tabellaDati(el, intest, righe) {
+  const d = document.createElement("details"); d.className = "dati";
+  d.innerHTML = `<summary>Tabella</summary><div class="table-wrap"><table><tr>${intest.map((h, i) => `<th${i ? ' class="num"' : ""}>${h}</th>`).join("")}</tr>${
+    righe.map(r => `<tr>${r.map((c, i) => `<td${i ? ' class="num"' : ""}>${c}</td>`).join("")}</tr>`).join("")}</table></div>`;
+  el.closest(".card").appendChild(d);
+}
+const GRAFICI = [];
+function grafico(el, disegna) { GRAFICI.push([el, disegna]); disegna(el); }
+let attesa; addEventListener("resize", () => { clearTimeout(attesa); attesa = setTimeout(() => GRAFICI.forEach(([el, f]) => f(el)), 150); });
+
+// colonne verticali: items [{x, v, tip}]
+function colonne(el, items, { h = 200, ogni = 1, fmt = v => num(v), etichetta = it => it.x } = {}) {
+  grafico(el, el => {
+    const W = el.clientWidth || 320, L = 40, B = 22, T = 10, s = svg(el, W, h);
+    const max = Math.max(...items.map(i => i.v || 0)), tk = tacche(max), top = tk[tk.length - 1] || 1;
+    const ph = h - B - T, band = (W - L) / Math.max(items.length, 6), bw = Math.min(28, Math.max(2, band - 4));
+    const y = v => T + ph - v / top * ph;
+    tk.forEach(v => { add(s, "line", { class: v ? "gl" : "ax", x1: L, x2: W, y1: y(v), y2: y(v) }); add(s, "text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, fmt(v)); });
+    items.forEach((it, i) => {
+      const x = L + i * band + (band - bw) / 2, v = it.v || 0;
+      const bar = v > 0 ? colonna(s, x, y(v), bw, ph * v / top, "bar") : null;
+      if (i % ogni === 0) add(s, "text", { x: L + i * band + band / 2, y: h - 6, "text-anchor": "middle" }, etichetta(it, i));
+      const hit = add(s, "rect", { class: "hit", x: L + i * band, y: T, width: band, height: ph });
+      hit.addEventListener("pointermove", e => { bar && bar.classList.add("on"); mostra(it.tip, e.clientX, e.clientY); });
+      hit.addEventListener("pointerleave", () => { bar && bar.classList.remove("on"); nascondi(); });
+    });
+  });
+}
+
+// barre orizzontali: items [{x, v, tip}]
+function barre(el, items, { fmt = v => num(v) } = {}) {
+  grafico(el, el => {
+    const W = el.clientWidth || 320, L = W < 400 ? 118 : 140, R = 64, riga = 28, h = items.length * riga, s = svg(el, W, h);
+    const max = Math.max(...items.map(i => i.v), 1), bh = 16;
+    items.forEach((it, i) => {
+      const yy = i * riga + (riga - bh) / 2, w = (W - L - R) * it.v / max;
+      add(s, "text", { class: "lbl", x: L - 8, y: yy + bh / 2 + 4, "text-anchor": "end" }, it.x);
+      let bar = null;
+      if (w > 0) { const r = Math.min(4, w); bar = add(s, "path", { class: "bar", d: `M${L},${yy}H${L + w - r}Q${L + w},${yy} ${L + w},${yy + r}V${yy + bh - r}Q${L + w},${yy + bh} ${L + w - r},${yy + bh}H${L}Z` }); }
+      add(s, "text", { class: "val", x: L + w + 6, y: yy + bh / 2 + 4 }, fmt(it.v));
+      const hit = add(s, "rect", { class: "hit", x: 0, y: i * riga, width: W, height: riga });
+      hit.addEventListener("pointermove", e => { bar && bar.classList.add("on"); mostra(it.tip, e.clientX, e.clientY); });
+      hit.addEventListener("pointerleave", () => { bar && bar.classList.remove("on"); nascondi(); });
+    });
+  });
+}
+
+function tile(label, valore, unita, note = "") {
+  return `<div class="card tile"><div class="label">${label}</div><div class="value">${valore}${unita ? `<small>${unita}</small>` : ""}</div>${note ? `<div class="note">${note}</div>` : ""}</div>`;
+}
+function tabella(el, intest, righe) {
+  el.innerHTML = `<tr>${intest.map(([h, n]) => `<th${n ? ' class="num"' : ""}>${h}</th>`).join("")}</tr>` +
+    righe.map(r => `<tr>${r.map((c, i) => `<td${intest[i][1] ? ' class="num"' : ""}>${c}</td>`).join("")}</tr>`).join("");
+}
+
+function avvia(D) {
+  const T = D.totali, S = D.spese, ultima = S[S.length - 1];
+  $("aggiornato").textContent = `Dal ${data(T.dal)} · aggiornati il ${data(D.aggiornato.slice(0, 10))} alle ${D.aggiornato.slice(11)}`;
+
+  // --- in sintesi ---
+  const consegneGratis = S.filter(s => !s.consegna).length;
+  $("tiles").innerHTML =
+    tile("Speso in tutto", num(T.speso, 2), "€", `${T.spese === 1 ? "1 spesa" : T.spese + " spese"}`) +
+    tile("Spesa media", num(T.medio, 2), "€", `${num(T.prodotti_diversi)} prodotti diversi in tutto`) +
+    tile("Consegna pagata", num(T.consegna, 2), "€", consegneGratis ? `${consegneGratis} ${consegneGratis === 1 ? "consegna gratuita" : "consegne gratuite"}` : `${num(T.consegna / T.spese, 2)} € a spesa`) +
+    tile("Risparmio promo", num(T.risparmio, 2), "€", T.speso ? `${num(T.risparmio / (T.speso + T.risparmio) * 100, 1)}% del prezzo pieno` : "") +
+    (ultima ? tile("Ultima spesa", num(ultima.totale, 2), "€", `${data(ultima.data)}${ultima.provvisorio ? " · provvisoria" : ""}`) : "");
+
+  // --- mesi e categorie ---
+  colonne($("c-mesi"), D.mesi.map(m => ({ x: m.mese, v: m.totale,
+    tip: `<b>${euro(m.totale)}</b><br>${mese(m.mese)} · ${m.spese === 1 ? "1 spesa" : m.spese + " spese"}${m.consegna ? `<br>consegna ${euro(m.consegna)}` : ""}` })),
+    { fmt: v => num(v) + " €", ogni: Math.ceil(D.mesi.length / 8), etichetta: it => MESI[+it.x.slice(5) - 1] + " " + it.x.slice(2, 4) });
+  tabellaDati($("c-mesi"), ["Mese", "Spese", "Consegna", "Totale"], D.mesi.slice().reverse().map(m => [mese(m.mese), m.spese, euro(m.consegna), euro(m.totale)]));
+
+  const totCat = D.categorie.reduce((a, c) => a + c.totale, 0) || 1;
+  $("sub-cat").textContent = "Totale di tutte le spese";
+  barre($("c-cat"), D.categorie.map(c => ({ x: c.nome, v: c.totale,
+    tip: `<b>${esc(c.nome)}</b><br>${euro(c.totale)} · ${num(c.totale / totCat * 100, 1)}%<br>${c.pezzi === 1 ? "1 pezzo" : c.pezzi + " pezzi"}` })),
+    { fmt: v => num(v) + " €" });
+  tabellaDati($("c-cat"), ["Categoria", "Pezzi", "%", "Totale"], D.categorie.map(c => [esc(c.nome), c.pezzi, num(c.totale / totCat * 100, 1) + "%", euro(c.totale)]));
+
+  // --- le spese ---
+  tabella($("t-spese"), [["Consegna"], ["Prodotti", 1], ["Pezzi", 1], ["Promo", 1], ["Costo consegna", 1], ["Totale", 1]],
+    S.slice().reverse().map(s => [
+      `${data(s.data)} · ${s.fascia}${s.provvisorio ? ' <span class="prov">provvisoria</span>' : ""}`,
+      s.prodotti, s.pezzi, s.risparmio ? "−" + euro(s.risparmio) : "–",
+      s.consegna ? euro(s.consegna) : `<span class="muted" title="${esc(s.nota_consegna || "")}">gratis</span>`,
+      `<b>${euro(s.totale)}</b>`]));
+
+  // --- prodotti ---
+  const P = D.prodotti;
+  const disegnaProdotti = filtro => {
+    const f = filtro.trim().toLowerCase();
+    const righe = P.filter(p => !f || (p.nome + " " + (p.marca || "") + " " + p.categoria).toLowerCase().includes(f));
+    tabella($("t-prodotti"), [["Prodotto"], ["Volte", 1], ["Pezzi", 1], ["Prezzo", 1], ["Ogni", 1], ["Ultima volta", 1]],
+      righe.map(p => [`${esc(p.nome)}<span class="cat">${esc(p.categoria)}</span>`, p.volte, p.pezzi, euro(p.ultimo_prezzo),
+        p.ogni_giorni ? `${p.ogni_giorni} gg` : '<span class="muted">–</span>', data(p.ultima, false)]));
+    if (!righe.length) $("t-prodotti").insertAdjacentHTML("beforeend", '<tr><td colspan="6" class="muted">Nessun prodotto trovato</td></tr>');
+  };
+  disegnaProdotti("");
+  $("cerca").addEventListener("input", e => disegnaProdotti(e.target.value));
+
+  // --- prezzi ---
+  $("l-prezzi").innerHTML = D.prezzi.length
+    ? D.prezzi.map(x => { const su = x.a > x.da, pct = (x.a - x.da) / x.da * 100;
+        return `<li><span class="k">${esc(x.nome)}</span><span class="v">${euro(x.da)} → ${euro(x.a)} <span class="${su ? "su" : "giu"}">${su ? "▲ +" : "▼ "}${num(pct, 0)}%</span></span></li>`; }).join("")
+    : `<li class="vuoto">Nessun cambio di prezzo per ora: serve almeno una seconda spesa con gli stessi prodotti.</li>`;
+}
+</script>
+</body>
+</html>
