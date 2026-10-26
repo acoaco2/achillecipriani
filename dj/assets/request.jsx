@@ -92,12 +92,12 @@ function RequestPage({ navigate, store }) {
         <p style={{ fontSize: 13, color: "var(--ink-soft)", maxWidth: 280, margin: "0 auto 28px", lineHeight: 1.5 }}>
           Aco l'ha ricevuta in console. Se si incastra nel set, parte.
         </p>
-        <button className="btn" onClick={() => setSubmitted(null)}>
-          Request another
+        <button className="btn" onClick={() => { setGoQueue(true); setSubmitted(null); }}>
+          See the queue
         </button>
         <div style={{ marginTop: 10 }}>
-          <button className="btn ghost" onClick={() => { setGoQueue(true); setSubmitted(null); }}>
-            See the queue
+          <button className="btn ghost" onClick={() => setSubmitted(null)}>
+            Request another
           </button>
         </div>
         <div style={{ marginTop: 10 }}>
