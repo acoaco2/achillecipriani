@@ -16,10 +16,16 @@ create table if not exists public.requests (
   color     text,
   requester text   not null default 'Anon',
   votes     int    not null default 1,
-  status    text   not null default 'queued' check (status in ('queued', 'played')),
+  status    text   not null default 'queued' check (status in ('queued', 'played', 'skipped')),
   ts        bigint not null,
   vote_log  jsonb  not null default '[]'::jsonb
 );
+
+-- Stati: queued (in coda), played (suonata), skipped (scartata dal dj, dal
+-- 26/10/2026). Sulle tabelle create prima di skipped il check va rifatto.
+alter table public.requests drop constraint if exists requests_status_check;
+alter table public.requests add constraint requests_status_check
+  check (status in ('queued', 'played', 'skipped'));
 
 create index if not exists requests_ts_idx on public.requests (ts desc);
 
@@ -35,7 +41,7 @@ create index if not exists requests_ts_idx on public.requests (ts desc);
 --
 --    Non usare 'aco': e' il ripiego offline scritto nel sorgente del sito, ed e'
 --    quindi pubblico. Il PIN qui sotto e' quello che protegge davvero le
---    operazioni distruttive (segna suonata / cancella).
+--    operazioni distruttive (segna suonata / scartata / cancella).
 -- ---------------------------------------------------------------------------
 create table if not exists public.dj_settings (
   id  int primary key default 1 check (id = 1),
@@ -98,7 +104,8 @@ begin
   v_requester := left(coalesce(nullif(btrim(coalesce(p_requester, '')), ''), 'Anon'), 24);
   v_entry     := jsonb_build_array(jsonb_build_object('ts', v_now, 'requester', v_requester));
 
-  -- serializza i voti concorrenti sullo stesso brano
+  -- serializza i voti concorrenti sullo stesso brano. Un voto su un brano
+  -- scartato finisce sulla sua riga e il brano resta scartato.
   perform pg_advisory_xact_lock(hashtext(lower(v_title) || '§' || lower(v_artist)));
 
   select r.* into v_row
@@ -147,7 +154,7 @@ begin
   if not public.dj_check(p_pin) then
     raise exception 'PIN dj non valido';
   end if;
-  if p_status not in ('queued', 'played') then
+  if p_status not in ('queued', 'played', 'skipped') then
     raise exception 'stato non valido: %', p_status;
   end if;
   update public.requests set status = p_status where id = p_id;

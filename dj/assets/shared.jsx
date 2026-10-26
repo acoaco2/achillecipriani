@@ -51,9 +51,9 @@ const rowToReq = (r) => ({
 
 // Coda delle richieste da suonare: prima i brani con piu' voti, a parita' di
 // voti chi ha chiesto prima (ts e' l'orario della prima richiesta, i voti dopo
-// non lo cambiano).
+// non lo cambiano). Suonate (played) e scartate (skipped) escono dalla coda.
 const byPriority = (a, b) => (b.votes - a.votes) || (a.ts - b.ts);
-const toPlayQueue = (requests) => requests.filter(r => r.status !== "played").sort(byPriority);
+const toPlayQueue = (requests) => requests.filter(r => r.status === "queued").sort(byPriority);
 
 const getPin = () => { try { return sessionStorage.getItem(PIN_KEY) || ""; } catch (e) { return ""; } };
 const setPin = (pin) => { try { sessionStorage.setItem(PIN_KEY, pin); } catch (e) {} };

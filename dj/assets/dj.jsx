@@ -30,6 +30,8 @@ function MonitorPage({ store, navigate }) {
   const top    = queue.slice(0, 5);
   const rest   = queue.slice(5);
   const played = store.requests.filter(r => r.status === "played").sort((a, b) => b.votes - a.votes);
+  const skipped = store.requests.filter(r => r.status === "skipped").sort((a, b) => b.votes - a.votes);
+  const setStatus = (id, status) => run(() => store.update(id, { status }));
   const hhmm = (ts) => new Date(ts).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
   const allIds = store.requests.map(r => r.id);
 
@@ -39,13 +41,14 @@ function MonitorPage({ store, navigate }) {
   const exportCsv = () => {
     const dateStr = new Date().toLocaleDateString("it-IT");
     const q = (s) => `"${String(s).replace(/"/g, '""')}"`;
-    const rows = [["orario", "nome", "artista", "titolo"].map(q).join(",")];
+    const statusLabel = { queued: "in coda", played: "suonata", skipped: "scartata" };
+    const rows = [["orario", "nome", "artista", "titolo", "stato"].map(q).join(",")];
     store.requests
-      .flatMap(r => (r.voteLog || [{ ts: r.ts, requester: r.requester }]).map(v => ({ ...v, title: r.title, artist: r.artist })))
+      .flatMap(r => (r.voteLog || [{ ts: r.ts, requester: r.requester }]).map(v => ({ ...v, title: r.title, artist: r.artist, status: r.status })))
       .sort((a, b) => a.ts - b.ts)
       .forEach(v => {
         const t = new Date(v.ts).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-        rows.push([t, v.requester, v.artist, v.title].map(q).join(","));
+        rows.push([t, v.requester, v.artist, v.title, statusLabel[v.status] || v.status].map(q).join(","));
       });
     const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8" });
     const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `classifica-${dateStr.replace(/\//g, "-")}.csv` });
@@ -171,18 +174,8 @@ function MonitorPage({ store, navigate }) {
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 40, color: "var(--orange)" }}>
                   {r.votes}
                 </div>
-                <button
-                  onClick={() => run(() => store.update(r.id, { status: "played" }))}
-                  title="Segna come suonata"
-                  style={{
-                    width: 40, height: 40, borderRadius: "50%",
-                    background: "transparent", border: "1.5px solid rgba(255,255,255,0.25)",
-                    color: "rgba(255,255,255,0.4)", fontSize: 18, cursor: "pointer",
-                    display: "grid", placeItems: "center", transition: "all 0.15s",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--orange)"; e.currentTarget.style.color = "var(--orange)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
-                >✓</button>
+                <ActionBtn size={40} title="Scarta" hover="#FF7A63" onClick={() => setStatus(r.id, "skipped")}>✕</ActionBtn>
+                <ActionBtn size={40} title="Segna come suonata" onClick={() => setStatus(r.id, "played")}>✓</ActionBtn>
               </div>
             </div>
           ))}
@@ -211,18 +204,8 @@ function MonitorPage({ store, navigate }) {
                 <div style={{ width: 32, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--orange)", flexShrink: 0 }}>
                   {r.votes}v
                 </div>
-                <button
-                  onClick={() => run(() => store.update(r.id, { status: "played" }))}
-                  title="Segna come suonata"
-                  style={{
-                    width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
-                    background: "transparent", border: "1px solid rgba(255,255,255,0.2)",
-                    color: "rgba(255,255,255,0.35)", fontSize: 12, cursor: "pointer",
-                    display: "grid", placeItems: "center", transition: "all 0.15s",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--orange)"; e.currentTarget.style.color = "var(--orange)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = "rgba(255,255,255,0.35)"; }}
-                >✓</button>
+                <ActionBtn size={26} title="Scarta" hover="#FF7A63" onClick={() => setStatus(r.id, "skipped")}>✕</ActionBtn>
+                <ActionBtn size={26} title="Segna come suonata" onClick={() => setStatus(r.id, "played")}>✓</ActionBtn>
               </div>
             ))}
           </div>
@@ -298,8 +281,67 @@ function MonitorPage({ store, navigate }) {
         </div>
       )}
 
+      {/* Scartate: con ↺ tornano in coda, se la ✕ e' partita per sbaglio */}
+      {skipped.length > 0 && (
+        <div style={{ marginTop: 32, borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", color: "rgba(255,255,255,0.3)" }}>
+              SCARTATE
+            </div>
+            <button
+              onClick={() => run(() => store.removeMany(skipped.map(r => r.id)))}
+              style={{
+                background: "transparent", border: "1px solid rgba(255,255,255,0.15)",
+                color: "rgba(255,255,255,0.3)", borderRadius: 6, padding: "3px 8px",
+                fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.1em", cursor: "pointer",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; e.currentTarget.style.color = "rgba(255,255,255,0.3)"; }}
+            >CANCELLA</button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {skipped.map(r => (
+              <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <div style={{ flex: 1, minWidth: 0, fontSize: 16, opacity: 0.4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {r.title}
+                </div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--cream-2)", opacity: 0.4, flexShrink: 0 }}>
+                  {r.artist}
+                </div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, opacity: 0.4, flexShrink: 0 }}>
+                  {r.votes}v
+                </div>
+                <ActionBtn size={22} title="Rimetti in coda" onClick={() => setStatus(r.id, "queued")}>↺</ActionBtn>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <PreflightMemo/>
     </div>
+  );
+}
+
+// Pulsante tondo delle azioni del dj: ✓ suonata, ✕ scartata, ↺ rimetti in coda.
+function ActionBtn({ size, title, hover = "var(--orange)", onClick, children }) {
+  const big = size >= 40;
+  const idleBorder = big ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.2)";
+  const idleColor = big ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.35)";
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      style={{
+        width: size, height: size, borderRadius: "50%", flexShrink: 0,
+        background: "transparent", border: `${big ? 1.5 : 1}px solid ${idleBorder}`,
+        color: idleColor, fontSize: Math.round(size * 0.45), cursor: "pointer",
+        display: "grid", placeItems: "center", transition: "all 0.15s",
+      }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = hover; e.currentTarget.style.color = hover; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = idleBorder; e.currentTarget.style.color = idleColor; }}
+    >{children}</button>
   );
 }
 

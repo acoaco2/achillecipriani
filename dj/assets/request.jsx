@@ -19,10 +19,11 @@ function RequestPage({ navigate, store }) {
     setGoQueue(false);
   }, [goQueue, submitted]);
 
-  const playedKeys = React.useMemo(() => {
+  // Brani gia' suonati o scartati dal dj: non si possono richiedere di nuovo.
+  const hiddenKeys = React.useMemo(() => {
     return new Set(
       store.requests
-        .filter(r => r.status === "played")
+        .filter(r => r.status === "played" || r.status === "skipped")
         .map(r => r.title.toLowerCase() + "§" + r.artist.toLowerCase())
     );
   }, [store.requests]);
@@ -32,16 +33,16 @@ function RequestPage({ navigate, store }) {
     const q = query.trim().toLowerCase();
     if (!q) return [];
     return catalog
-      .filter(t => !playedKeys.has(t.title.toLowerCase() + "§" + t.artist.toLowerCase()))
+      .filter(t => !hiddenKeys.has(t.title.toLowerCase() + "§" + t.artist.toLowerCase()))
       .filter(t =>
         t.title.toLowerCase().includes(q) ||
         t.artist.toLowerCase().includes(q) ||
         (t.album && t.album.toLowerCase().includes(q))
       )
       .slice(0, 8);
-  }, [query, catalog, playedKeys]);
+  }, [query, catalog, hiddenKeys]);
 
-  // Le prime 5 della coda del dj (non una classifica: le suonate escono).
+  // Le prime 5 della coda del dj (non una classifica: suonate e scartate escono).
   const todayTop = React.useMemo(() => toPlayQueue(store.requests).slice(0, 5), [store.requests]);
 
   if (catalog === undefined) return null;
