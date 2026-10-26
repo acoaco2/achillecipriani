@@ -9,6 +9,15 @@ function RequestPage({ navigate, store }) {
   const [sending, setSending] = React.useState(false);
   const [sendError, setSendError] = React.useState(null);
   const inputRef = React.useRef(null);
+  // Dopo l'invio, "See the queue" torna qui e scorre fino alla coda.
+  const [goQueue, setGoQueue] = React.useState(false);
+  const queueRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!goQueue || submitted || !queueRef.current) return;
+    queueRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    setGoQueue(false);
+  }, [goQueue, submitted]);
 
   const playedKeys = React.useMemo(() => {
     return new Set(
@@ -86,6 +95,11 @@ function RequestPage({ navigate, store }) {
           Request another
         </button>
         <div style={{ marginTop: 10 }}>
+          <button className="btn ghost" onClick={() => { setGoQueue(true); setSubmitted(null); }}>
+            See the queue
+          </button>
+        </div>
+        <div style={{ marginTop: 10 }}>
           <button className="btn ghost" onClick={() => navigate("home")}>
             Back home
           </button>
@@ -122,7 +136,7 @@ function RequestPage({ navigate, store }) {
             onChange={(e) => { setQuery(e.target.value); setSelected(null); }}
             placeholder="Song, artist or album…"
             style={{ paddingLeft: 42, paddingRight: query ? 42 : 16 }}
-            autoFocus
+            autoFocus={!goQueue}
           />
           {query && (
             <button
@@ -185,7 +199,7 @@ function RequestPage({ navigate, store }) {
             )
           ) : (
             <>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.15em", color: "var(--mute)", margin: "14px 0 8px" }}>
+              <div ref={queueRef} style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.15em", color: "var(--mute)", margin: "14px 0 8px", scrollMarginTop: 80 }}>
                 PROSSIME IN CODA
               </div>
               {todayTop.length === 0 ? (
