@@ -8,8 +8,8 @@ const dashboardUrl = (() => {
 function MonitorPage({ store, navigate }) {
   const [now, setNow] = React.useState(Date.now());
   const [actionError, setActionError] = React.useState(null);
-  // Arrivando qui da segnalibro (#monitor) il PIN non e' in sessione: la
-  // classifica si vede lo stesso, ma per agire serve sbloccare.
+  // Arrivando qui da segnalibro (#monitor) il PIN non e' in sessione: le
+  // richieste si vedono lo stesso, ma per agire serve sbloccare.
   const [needPin, setNeedPin] = React.useState(() => store.cloud && !getDjPin());
 
   React.useEffect(() => {
@@ -25,8 +25,12 @@ function MonitorPage({ store, navigate }) {
 
   // Nessun filtro per data: le richieste restano finche' il dj non preme RESET
   // dopo la serata (cosi' si possono raccogliere anche nei giorni prima).
-  const top    = store.requests.filter(r => r.status !== "played").sort((a, b) => b.votes - a.votes).slice(0, 5);
+  // In grande le prime 5 della coda, sotto in piccolo le altre.
+  const queue  = toPlayQueue(store.requests);
+  const top    = queue.slice(0, 5);
+  const rest   = queue.slice(5);
   const played = store.requests.filter(r => r.status === "played").sort((a, b) => b.votes - a.votes);
+  const hhmm = (ts) => new Date(ts).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
   const allIds = store.requests.map(r => r.id);
 
   const [confirmReset, setConfirmReset] = React.useState(false);
@@ -68,10 +72,10 @@ function MonitorPage({ store, navigate }) {
             onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.35)"}
           >← home</button>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", color: "var(--orange)", marginBottom: 6 }}>
-            ● CLASSIFICA DELLA SERATA
+            ● RICHIESTE IN CODA · {queue.length}
           </div>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 52, lineHeight: 0.9 }}>
-            Top 5<span style={{ color: "var(--orange)" }}>.</span>
+            Da suonare<span style={{ color: "var(--orange)" }}>.</span>
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
@@ -135,7 +139,7 @@ function MonitorPage({ store, navigate }) {
         </div>
       )}
 
-      {/* Top 5 */}
+      {/* Prime 5 della coda */}
       {top.length === 0 ? (
         <div style={{ marginTop: 80, textAlign: "center", fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--cream-2)", letterSpacing: "0.1em" }}>
           Nessuna richiesta ancora.
@@ -160,6 +164,7 @@ function MonitorPage({ store, navigate }) {
                 </div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 15, color: "var(--cream-2)", marginTop: 4, letterSpacing: "0.05em" }}>
                   {r.artist}
+                  <span style={{ color: "rgba(255,255,255,0.3)" }}> · {hhmm(r.ts)}</span>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
@@ -181,6 +186,46 @@ function MonitorPage({ store, navigate }) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Resto della coda, compatto: per farsi un'idea di cosa c'e' dopo */}
+      {rest.length > 0 && (
+        <div style={{ marginTop: 40, borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 20 }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", color: "rgba(255,255,255,0.45)", marginBottom: 12 }}>
+            ALTRE IN CODA · {rest.length}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {rest.map((r, i) => (
+              <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ width: 28, flexShrink: 0, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
+                  {i + 6}
+                </div>
+                <div style={{ flex: 1, minWidth: 0, fontSize: 16, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {r.title}
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--cream-2)" }}> · {r.artist}</span>
+                </div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>
+                  {hhmm(r.ts)}
+                </div>
+                <div style={{ width: 32, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--orange)", flexShrink: 0 }}>
+                  {r.votes}v
+                </div>
+                <button
+                  onClick={() => run(() => store.update(r.id, { status: "played" }))}
+                  title="Segna come suonata"
+                  style={{
+                    width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
+                    background: "transparent", border: "1px solid rgba(255,255,255,0.2)",
+                    color: "rgba(255,255,255,0.35)", fontSize: 12, cursor: "pointer",
+                    display: "grid", placeItems: "center", transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--orange)"; e.currentTarget.style.color = "var(--orange)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = "rgba(255,255,255,0.35)"; }}
+                >✓</button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -306,7 +351,7 @@ function PreflightMemo() {
           </>)}
           {item("03", <>
             <strong style={{ color: "var(--cream)", fontWeight: 600 }}>Dopo la serata premi RESET.</strong>{" "}
-            Le richieste non scadono da sole: restano in classifica finché non le azzeri, e il reset propone prima di esportarle.
+            Le richieste non scadono da sole: restano in coda finché non le azzeri, e il reset propone prima di esportarle.
           </>)}
         </ol>
       )}
@@ -315,7 +360,7 @@ function PreflightMemo() {
 }
 
 // Sblocco delle azioni riservate quando si arriva al monitor senza passare
-// dalla password della home. La lettura della classifica resta libera.
+// dalla password della home. La lettura delle richieste resta libera.
 function PinUnlock({ onDone }) {
   const [pin, setPin] = React.useState("");
   const [busy, setBusy] = React.useState(false);
@@ -338,7 +383,7 @@ function PinUnlock({ onDone }) {
       display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
     }}>
       <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--cream-2)" }}>
-        {wrong ? "PIN errato, riprova" : "PIN dj per gestire la classifica"}
+        {wrong ? "PIN errato, riprova" : "PIN dj per gestire le richieste"}
       </span>
       <input
         type="password"

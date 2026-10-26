@@ -49,6 +49,12 @@ const rowToReq = (r) => ({
   voteLog: Array.isArray(r.vote_log) ? r.vote_log : [],
 });
 
+// Coda delle richieste da suonare: prima i brani con piu' voti, a parita' di
+// voti chi ha chiesto prima (ts e' l'orario della prima richiesta, i voti dopo
+// non lo cambiano).
+const byPriority = (a, b) => (b.votes - a.votes) || (a.ts - b.ts);
+const toPlayQueue = (requests) => requests.filter(r => r.status !== "played").sort(byPriority);
+
 const getPin = () => { try { return sessionStorage.getItem(PIN_KEY) || ""; } catch (e) { return ""; } };
 const setPin = (pin) => { try { sessionStorage.setItem(PIN_KEY, pin); } catch (e) {} };
 
@@ -354,5 +360,5 @@ function TopBar({ route, navigate }) {
 // Export to window for other files
 Object.assign(window, {
   useHashRoute, useRequestStore, useCatalog, AlbumArt, Vinyl, QRCode, TopBar,
-  verifyDjPin, setDjPin: setPin, getDjPin: getPin,
+  verifyDjPin, setDjPin: setPin, getDjPin: getPin, toPlayQueue,
 });
