@@ -338,6 +338,8 @@ function avvia(D) {
   }
   if (B.immagine && ore(B.immagine.data + " 04:30", ORA) > 17 * 24) prob.push(["warn", `Immagine della microSD vecchia: ${giornoCorto(B.immagine.data)}`]);
   if (B.pc && B.pc.ultimo_ok && ore(B.pc.ultimo_ok, ORA) > 48) prob.push(["warn", `Backup di Claude del PC fermo dal ${giornoCorto(B.pc.ultimo_ok)}`]);
+  if (B.immich && (!B.immich.dump || ore(B.immich.dump, ORA) > 14 * 24))
+    prob.push(["warn", B.immich.dump ? `Backup di Immich vecchio: l'ultimo dump su OneDrive è del ${giornoCorto(B.immich.dump)}` : "Backup di Immich: nessun dump su OneDrive"]);
   if (S.disco.pct >= 85) prob.push(["bad", `Disco al ${S.disco.pct}%`]);
   if (S.riavvio) prob.push(["warn", "Serve un riavvio per gli aggiornamenti"]);
   if (S.throttled && S.throttled !== "0x0") prob.push(["warn", `Alimentazione o temperatura: throttled ${esc(S.throttled)}`]);
@@ -420,6 +422,12 @@ function avvia(D) {
     `<span class="st ${B.immagine.ok ? "ok" : "bad"}">${B.immagine.ok ? "ok" : "da controllare"}</span><small>${quando(B.immagine.data)} · ${num(B.immagine.gb, 1)} GB</small>`]);
   if (B.pc) vb.push(["Backup di Claude del PC<small>controllato ogni giorno alle 16</small>",
     `<span class="st ${B.pc.errori === 0 ? "ok" : "warn"}">${B.pc.errori === 0 ? "ok" : B.pc.errori + " errori"}</span><small>${quando(B.pc.ultimo)}</small>`]);
+  if (B.immich) {
+    const vecchio = !B.immich.dump || ore(B.immich.dump, ORA) > 14 * 24;
+    vb.push(["Backup di Immich (Mac)<small>ultimo dump del database su OneDrive, controllato alle 16</small>",
+      `<span class="st ${vecchio ? "warn" : B.immich.errore ? "warn" : "ok"}">${vecchio ? "vecchio" : B.immich.errore ? "errore" : "ok"}</span>` +
+      `<small>${B.immich.dump ? quando(B.immich.dump) + " · " + num(B.immich.mb) + " MB" : "nessun dump"}${B.immich.errore ? " · " + esc(B.immich.errore) : ""}</small>`]);
+  }
   vb.push(["Copie di conflitto di OneDrive", nConfl ? `<span class="st warn">${nConfl}</span><small>${B.conflitti.map(([a, n]) => `${esc(a)}: ${n}`).join(" · ")}</small>` : '<span class="st ok">nessuna</span>']);
   $("l-backup").innerHTML = vb.map(([k, v]) => `<li><span class="k">${k}</span><span class="v">${v}</span></li>`).join("");
 
