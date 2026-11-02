@@ -192,12 +192,17 @@ footer { margin-top: 48px; color: var(--muted); font-size: 12px; }
 
 <script>
 let CT = null;   // testo cifrato caricato, per accorgersi quando dati.json cambia
+// ?t=… sempre diverso: né il browser né la CDN di GitHub Pages possono dare una copia vecchia
+// (capitava di vedere i dati di una settimana prima finché non si ricaricava a mano)
+const prendiDati = () => fetch("dati.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json());
+// pagina ripristinata dalla memoria del browser (indietro/avanti): ricarica per avere i dati di adesso
+addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
 async function caricaDati() {
   let k = null;
   try { k = sessionStorage.getItem("aco-k"); } catch (e) {}
   if (!k || !window.crypto || !crypto.subtle) return bloccato();
   try {
-    const CIFRATO = await fetch("dati.json", { cache: "no-store" }).then(r => r.json());
+    const CIFRATO = await prendiDati();
     CT = CIFRATO.ct;
     const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
     const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(k), "PBKDF2", false, ["deriveKey"]);
@@ -233,7 +238,7 @@ function autoAggiorna() {
     if (Date.now() - APERTA > 36e5) return location.reload();
     inCorso = true;
     try {
-      const nuovo = await fetch("dati.json", { cache: "no-store" }).then(r => r.json());
+      const nuovo = await prendiDati();
       if (nuovo.ct && nuovo.ct !== CT) location.reload();
     } catch (e) {}
     inCorso = false;
