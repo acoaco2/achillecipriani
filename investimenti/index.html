@@ -49,6 +49,7 @@ h2 small { font-family: system-ui, sans-serif; font-size: 13px; color: var(--mut
 h3 { font-size: 14px; font-weight: 600; margin: 0 0 2px; }
 .indietro { display: inline-block; font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--series); text-decoration: none; margin-bottom: 14px; }
 .indietro:hover { text-decoration: underline; }
+.indietro[hidden] { display: none; }
 .sub { color: var(--ink-2); font-size: 13px; margin: 0 0 12px; }
 .muted { color: var(--muted); }
 button.theme { background: none; border: 1px solid var(--border); color: var(--ink-2); border-radius: 8px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; min-height: 32px; }
@@ -116,6 +117,7 @@ footer a { color: var(--muted); }
 <main>
   <header>
     <div>
+      <a class="indietro" id="indietro" href="/aco/" hidden>← Area personale</a>
       <h1>Investimenti</h1>
       <div class="sub" id="aggiornato"></div>
     </div>
@@ -143,26 +145,39 @@ footer a { color: var(--muted); }
 
 <script>
 // Come /nonna: il login della home rimanda qui con il token nel frammento (#k=...), che va in
-// sessionStorage e sparisce subito dall'indirizzo. Chiave propria, non quella di /aco.
+// sessionStorage e sparisce subito dall'indirizzo. Due chiavi: quella propria (login «investimenti»,
+// dati.json) e quella di /aco (aco-k, dati-aco.json), per chi arriva dall'area personale.
 const CHIAVE = "invest-k";
+const PROVE = [[CHIAVE, "dati.json"], ["aco-k", "dati-aco.json"]];
+let chiaveUsata = CHIAVE;
+async function decifraFile(k, file) {
+  const CIFRATO = await fetch(file + "?t=" + Date.now(), { cache: "no-store" }).then(r => r.json());
+  const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(k), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b(CIFRATO.salt), iterations: CIFRATO.iterations, hash: "SHA-256" },
+    km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b(CIFRATO.iv) }, key, b(CIFRATO.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
 async function caricaDati() {
   if (window.DATI_LOCALI) return window.DATI_LOCALI;   // anteprima locale
   const m = location.hash.match(/[#&]k=([^&]+)/);
   try { if (m) sessionStorage.setItem(CHIAVE, decodeURIComponent(m[1])); } catch (e) {}
   if (m) history.replaceState(null, "", location.pathname);
   addEventListener("hashchange", () => location.reload());
-  let k = null;
-  try { k = sessionStorage.getItem(CHIAVE); } catch (e) {}
-  if (!k || !window.crypto || !crypto.subtle) return bloccato();
-  try {
-    const CIFRATO = await fetch("dati.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json());
-    const b = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-    const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(k), "PBKDF2", false, ["deriveKey"]);
-    const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b(CIFRATO.salt), iterations: CIFRATO.iterations, hash: "SHA-256" },
-      km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
-    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b(CIFRATO.iv) }, key, b(CIFRATO.ct));
-    return JSON.parse(new TextDecoder().decode(pt));
-  } catch (e) { return bloccato(); }
+  if (!window.crypto || !crypto.subtle) return bloccato();
+  for (const [nome, file] of PROVE) {
+    let k = null;
+    try { k = sessionStorage.getItem(nome); } catch (e) {}
+    if (!k) continue;
+    try {
+      const dati = await decifraFile(k, file);
+      chiaveUsata = nome;
+      if (nome === "aco-k") document.getElementById("indietro").hidden = false;
+      return dati;
+    } catch (e) {}
+  }
+  return bloccato();
 }
 function bloccato() {
   document.querySelector("main").innerHTML = '<p class="blocco">Area riservata. <a href="/">Accedi dalla pagina iniziale</a>.</p>';
@@ -178,7 +193,7 @@ document.getElementById("tema").onclick = () => {
   try { localStorage.setItem("tema", root.dataset.theme); } catch (e) {}
 };
 
-document.getElementById("esci").onclick = () => { try { sessionStorage.removeItem(CHIAVE); } catch (e) {} location.href = "/"; };
+document.getElementById("esci").onclick = () => { try { sessionStorage.removeItem(chiaveUsata); } catch (e) {} location.href = "/"; };
 caricaDati().then(DATI => {
   try { if (DATI) avvia(DATI); }
   catch (e) { console.error(e); document.querySelector("main").insertAdjacentHTML("beforeend", '<p class="errore">Una parte della pagina non si è caricata.</p>'); }
