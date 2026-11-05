@@ -94,6 +94,19 @@ td .det { display: block; color: var(--muted); font-size: 12px; }
 .lista li:last-child { border-bottom: 0; }
 .lista .k { color: var(--ink-2); }
 .lista .v { text-align: right; font-variant-numeric: tabular-nums; }
+.banca { padding: 12px 0; border-bottom: 1px solid var(--grid); }
+.banca:last-of-type { border-bottom: 0; }
+.banca .testa { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; font-size: 13.5px; margin-bottom: 6px; }
+.banca .testa .nome { font-weight: 600; }
+.banca .testa .nome i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); margin-right: 7px; vertical-align: 0; }
+.banca .testa .nome span { color: var(--ink); }
+.banca .testa .quota { color: var(--muted); font-weight: 400; font-size: 12.5px; margin-left: 6px; }
+.banca .testa .ris { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.banca .riga { display: grid; grid-template-columns: 64px 1fr auto; align-items: center; gap: 10px; font-size: 12.5px; color: var(--ink-2); padding: 3px 0; cursor: default; }
+.banca .pista { position: relative; height: 14px; }
+.banca .bar { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background: var(--c); }
+.banca .bar.vuota { background: color-mix(in srgb, var(--c) 16%, transparent); border: 1.5px solid var(--c); border-left: 0; }
+.banca .val { font-variant-numeric: tabular-nums; text-align: right; min-width: 84px; color: var(--ink); white-space: nowrap; }
 .metro { margin: 14px 0 6px; }
 .metro .barra { position: relative; height: 10px; border-radius: 5px; background: var(--track); }
 .metro .zona { position: absolute; top: 0; bottom: 0; }
@@ -132,6 +145,20 @@ footer a { color: var(--muted); }
     <h3>Valore di mercato di tutti i titoli</h3>
     <div class="sub" id="sub-valore"></div>
     <div class="chart" id="c-valore"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Mediolanum e Banco BPM</h3>
+      <div class="sub">Quanto è stato investito in ciascuna banca e quanto vale oggi, cedole incassate comprese.</div>
+      <div id="c-banche"></div>
+      <div class="legenda"><span><i style="background:transparent;border:1.5px solid var(--muted);height:10px"></i>Investito</span><span><i style="background:var(--muted);height:10px"></i>Oggi: valore + cedole</span></div>
+    </div>
+    <div class="card">
+      <h3>Valore di mercato per banca</h3>
+      <div class="sub" id="sub-banche"></div>
+      <div class="chart" id="c-banche-linee"></div>
+    </div>
   </div>
 
   <div id="conti"></div>
@@ -253,9 +280,9 @@ function grafico(el, disegna) { GRAFICI.push([el, disegna]); disegna(el); }
 let attesa; addEventListener("resize", () => { clearTimeout(attesa); attesa = setTimeout(() => GRAFICI.forEach(([el, f]) => f(el)), 150); });
 
 // linee nel tempo. punti: [{d, ...}], serie: [{k, nome, colore}], rif: [{v, testo, cls}]
-function linee(el, punti, serie, { h = 220, fmt = v => num(v), fmtTip = fmt, min = null, max = null, rif = [] } = {}) {
+function linee(el, punti, serie, { h = 220, fmt = v => num(v), fmtTip = fmt, min = null, max = null, rif = [], destra = 58 } = {}) {
   grafico(el, el => {
-    const W = el.clientWidth || 320, L = 62, R = serie.length > 1 ? 58 : 12, B = 22, T = 10, s = svg(el, W, h);
+    const W = el.clientWidth || 320, L = 62, R = serie.length > 1 ? destra : 12, B = 22, T = 10, s = svg(el, W, h);
     const valori = punti.flatMap(p => serie.map(x => p[x.k])).filter(v => v != null).concat(rif.map(r => r.v));
     let lo = min ?? Math.min(...valori), hi = max ?? Math.max(...valori);
     if (lo === hi) { lo -= Math.abs(lo) * 0.02 || 1; hi += Math.abs(hi) * 0.02 || 1; }
@@ -404,6 +431,45 @@ function schedaCertificato(p, el) {
   tabellaDati(el2, ["Giorno", ...serie.map(s => esc(s.nome))], a.serie.slice().reverse().map(r => [data(r.d), ...serie.map(s => r[s.k] == null ? "–" : pct(r[s.k], 1))]));
 }
 
+// ---- confronto fra le banche ----
+// Il colore segue la banca (non l'ordine): Mediolanum s1, Banco BPM s2.
+const COLORE_CONTO = { mediolanum: "var(--s1)", bpm: "var(--s2)" };
+const nomeBreve = c => c.nome.replace(/^Banc[ao] /, "");
+function confrontoBanche(D, SV) {
+  const conti = D.conti.filter(c => c.posizioni.length).map((c, i) => {
+    const investito = c.posizioni.reduce((s, p) => s + (p.investito || 0), 0);
+    const cedole = c.posizioni.reduce((s, p) => s + (p.cedole || 0), 0);
+    return { c, colore: COLORE_CONTO[c.id] || (i ? "var(--s2)" : "var(--s1)"), investito, cedole, valore: c.valore, oggi: c.valore + cedole, ris: c.valore + cedole - investito };
+  });
+  if (!conti.length) { $("c-banche").innerHTML = '<p class="vuoto">Ancora nessun titolo caricato.</p>'; return; }
+  const totInv = conti.reduce((s, x) => s + x.investito, 0);
+  const scala = Math.max(...conti.flatMap(x => [x.investito, x.oggi]));
+  const w = v => (v / scala * 100).toFixed(2) + "%";
+  const percRis = x => x.investito ? (x.ris >= 0 ? "+" : "−") + num(Math.abs(x.ris / x.investito * 100), 1) + "%" : "";
+  $("c-banche").innerHTML = conti.map((x, i) => `<div class="banca" style="--c:${x.colore}">
+      <div class="testa"><span class="nome"><i></i><span>${esc(x.c.nome)}</span><span class="quota">${pct(x.investito / totInv)} dell'investito</span></span>
+        <span class="ris">${segno(x.ris, 0)} <span class="muted">${percRis(x)}</span></span></div>
+      <div class="riga" data-i="${i}"><span>Investito</span><span class="pista"><span class="bar vuota" style="width:${w(x.investito)}"></span></span><span class="val">${euro(x.investito, 0)}</span></div>
+      <div class="riga" data-i="${i}"><span>Oggi</span><span class="pista"><span class="bar" style="width:${w(x.oggi)}"></span></span><span class="val">${euro(x.oggi, 0)}</span></div>
+    </div>`).join("");
+  $("c-banche").querySelectorAll(".riga").forEach(r => {
+    const x = conti[+r.dataset.i];
+    r.addEventListener("pointermove", e => mostra(`<b>${esc(x.c.nome)}</b><br>Investito: ${euro(x.investito, 0)}<br>Valore di mercato: ${euro(x.valore, 0)}<br>Cedole incassate: ${euro(x.cedole, 0)} lorde<br>Risultato: ${segno(x.ris, 0)} ${percRis(x)}`, e.clientX, e.clientY));
+    r.addEventListener("pointerleave", nascondi);
+  });
+  tabellaDati($("c-banche"), ["Banca", "Investito", "Valore", "Cedole", "Risultato"],
+    conti.map(x => [esc(x.c.nome), euro(x.investito, 0), euro(x.valore, 0), euro(x.cedole, 0), `${segno(x.ris, 0)} ${percRis(x)}`]));
+
+  // valore di mercato per banca nel tempo: somma delle posizioni di ogni conto in serie_valore
+  const serie = conti.map(x => ({ k: x.c.id, nome: nomeBreve(x.c), colore: x.colore }));
+  const punti = SV.map(r => ({ d: r.d, ...Object.fromEntries(conti.map(x => [x.c.id, Math.round(x.c.posizioni.reduce((s, p) => s + (r[p.id] || 0), 0))])) }));
+  $("sub-banche").textContent = "Senza cedole: le cedole incassate sono nel confronto qui accanto. " +
+    (SV.length < 10 ? `Lo storico parte dal ${data(SV[0].d)}.` : `Dal ${data(SV[0].d)}.`);
+  linee($("c-banche-linee"), punti, serie, { fmt: v => num(v, 0) + " €", fmtTip: v => euro(v, 0), destra: 78 });
+  legenda($("c-banche-linee"), serie);
+  tabellaDati($("c-banche-linee"), ["Giorno", ...serie.map(s => esc(s.nome))], punti.slice().reverse().map(r => [data(r.d), ...serie.map(s => euro(r[s.k], 0))]));
+}
+
 function avvia(D) {
   const T = D.totali || D.totale;
   $("aggiornato").textContent = `Prezzi aggiornati il ${data(D.aggiornato)} alle ${D.aggiornato.slice(11)}`;
@@ -423,6 +489,7 @@ function avvia(D) {
     : `Dal ${data(SV[0].d)}, un punto per giorno di borsa.`;
   linee($("c-valore"), SV, [{ k: "totale", nome: "Totale", colore: "var(--series)" }], { fmt: v => num(v, 0) + " €", fmtTip: v => euro(v, 0) });
   tabellaDati($("c-valore"), ["Giorno", "Totale"], SV.slice().reverse().map(r => [data(r.d), euro(r.totale, 0)]));
+  confrontoBanche(D, SV);
 
   // conti
   const box = $("conti");
