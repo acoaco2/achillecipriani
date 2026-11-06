@@ -21,6 +21,7 @@
   --grid: #ebe6da; --axis: #d9d4c7; --border: rgba(27,26,23,0.12);
   --series: #1f5d63; --s1: #008f87; --s2: #b0661f; --track: #ebe6da;
   --good: #2e7d4f; --warn: #9a5b00; --bad: #9a4b3f;
+  --m-obb: #3d6e9e; --m-az: #b4513a; --m-cert: #7d7a2e;
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
@@ -29,6 +30,7 @@
     --grid: #22302e; --axis: #2f3f3d; --border: rgba(255,255,255,0.10);
     --series: #8fd4c8; --s1: #2aa79a; --s2: #c0823a; --track: #22302e;
     --good: #6cc28a; --warn: #e0b04a; --bad: #e08b7d;
+    --m-obb: #7fb0e0; --m-az: #e8876a; --m-cert: #c9c46e;
   }
 }
 :root[data-theme="dark"] {
@@ -37,6 +39,7 @@
   --grid: #22302e; --axis: #2f3f3d; --border: rgba(255,255,255,0.10);
   --series: #8fd4c8; --s1: #2aa79a; --s2: #c0823a; --track: #22302e;
   --good: #6cc28a; --warn: #e0b04a; --bad: #e08b7d;
+  --m-obb: #7fb0e0; --m-az: #e8876a; --m-cert: #c9c46e;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -107,6 +110,24 @@ td .det { display: block; color: var(--muted); font-size: 12px; }
 .banca .bar { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background: var(--c); }
 .banca .bar.vuota { background: color-mix(in srgb, var(--c) 16%, transparent); border: 1.5px solid var(--c); border-left: 0; }
 .banca .val { font-variant-numeric: tabular-nums; text-align: right; min-width: 84px; color: var(--ink); white-space: nowrap; }
+.mix { padding: 10px 0; border-bottom: 1px solid var(--grid); }
+.mix:last-of-type { border-bottom: 0; }
+.mix .testa { display: flex; justify-content: space-between; gap: 4px 12px; flex-wrap: wrap; font-size: 13.5px; margin-bottom: 6px; }
+.mix .testa b { font-weight: 600; }
+.mix .pila { display: flex; height: 16px; border-radius: 4px; overflow: hidden; gap: 2px; }
+.mix .pila span { background: var(--c); min-width: 2px; cursor: default; }
+.mix .cifre { display: flex; gap: 4px 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); margin-top: 5px; font-variant-numeric: tabular-nums; }
+.mix .cifre i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; background: var(--c); margin-right: 5px; }
+.dur { padding: 7px 0; cursor: default; }
+.dur .testa { display: flex; justify-content: space-between; gap: 2px 12px; flex-wrap: wrap; font-size: 13px; margin-bottom: 4px; }
+.dur .testa .quando { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.dur .pista { position: relative; height: 10px; background: var(--track); border-radius: 3px; }
+.dur .bar { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 3px; background: var(--c); }
+.dur .bar.vuota { background: color-mix(in srgb, var(--c) 16%, transparent); border: 1.5px solid var(--c); }
+.dur .pista.ignota { background: repeating-linear-gradient(90deg, var(--track) 0 6px, transparent 6px 10px); }
+.anni { position: relative; height: 18px; margin-top: 6px; font-size: 11px; color: var(--muted); }
+.anni span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.anni span::before { content: ""; position: absolute; left: 50%; top: -6px; height: 4px; border-left: 1px solid var(--axis); }
 .metro { margin: 14px 0 6px; }
 .metro .barra { position: relative; height: 10px; border-radius: 5px; background: var(--track); }
 .metro .zona { position: absolute; top: 0; bottom: 0; }
@@ -158,6 +179,21 @@ footer a { color: var(--muted); }
       <h3>Valore di mercato per banca</h3>
       <div class="sub" id="sub-banche"></div>
       <div class="chart" id="c-banche-linee"></div>
+    </div>
+  </div>
+
+  <h2>Composizione e durata</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Azioni e obbligazioni</h3>
+      <div class="sub" id="sub-mix"></div>
+      <div id="c-mix"></div>
+    </div>
+    <div class="card">
+      <h3>Quando finiscono</h3>
+      <div class="sub">Da oggi alla scadenza dei titoli. I fondi non scadono: per loro c'è la durata consigliata dal documento ufficiale (KID), contata dall'acquisto.</div>
+      <div id="c-durata"></div>
+      <div class="legenda"><span><i style="background:var(--muted);height:10px"></i>Scadenza</span><span><i style="background:transparent;border:1.5px solid var(--muted);height:10px"></i>Durata consigliata (fondi)</span><span><i style="background:var(--s1);height:10px"></i>Mediolanum</span><span><i style="background:var(--s2);height:10px"></i>Banco BPM</span></div>
     </div>
   </div>
 
@@ -236,6 +272,16 @@ const pct = (v, d = 0) => v == null ? "–" : num(v * 100, d) + "%";
 const data = (s, anno = true) => { if (!s) return "–"; const [y, m, d] = s.slice(0, 10).split("-"); return `${+d} ${MESI[m - 1]}${anno ? " " + y : ""}`; };
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const $ = id => document.getElementById(id);
+const meseAnno = s => s ? MESI[+s.slice(5, 7) - 1] + " " + s.slice(0, 4) : "–";
+const oggiIso = () => new Date().toISOString().slice(0, 10);
+function addMesi(s, n) { const [y, m, d] = s.split("-").map(Number); const t = new Date(Date.UTC(y, m - 1 + n, 1)); t.setUTCDate(Math.min(d, new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, 0)).getUTCDate())); return t.toISOString().slice(0, 10); }
+const fineFondo = p => p.detenzione_anni && p.data_acquisto ? addMesi(p.data_acquisto, 12 * p.detenzione_anni) : null;
+const finePac = pac => pac.prima_rata && pac.rate ? addMesi(pac.prima_rata, (pac.rate - 1) * (pac.frequenza_mesi || 1)) : null;
+function prossimaRata(pac) {
+  if (!pac.prima_rata) return null;
+  for (let i = 0; !pac.rate || i < pac.rate; i++) { const d = addMesi(pac.prima_rata, i * (pac.frequenza_mesi || 1)); if (d >= oggiIso()) return [d, i + 1]; if (i > 600) break; }
+  return null;
+}
 const giorniDa = s => Math.round((new Date(s) - new Date(new Date().toISOString().slice(0, 10))) / 864e5);
 
 // ---- tooltip ----
@@ -368,8 +414,10 @@ function schedaFondo(p, el) {
       <li><span class="k">Valore</span><span class="v">${euro(p.valore)} <span class="muted">(carico ${euro(p.carico)})</span></span></li>
       <li><span class="k">Guadagno ai fini fiscali</span><span class="v">${euro(a.plus_fiscale)}</span></li>
       <li><span class="k">Tasse se lo vendi oggi</span><span class="v">circa ${euro(a.tasse_se_vendi, 0)} <span class="muted">(26%)</span></span></li>
+      <li><span class="k">Durata consigliata</span><span class="v">${p.detenzione_anni ? `${p.detenzione_anni} anni <span class="muted">(fino a ${meseAnno(fineFondo(p))})</span>` : '<span class="muted">non nota</span>'}</span></li>
+      ${p.pac ? `<li><span class="k">Piano di accumulo</span><span class="v">${euro(p.pac.rata, 0)} ${(p.pac.frequenza_mesi || 1) === 1 ? "al mese" : `ogni ${p.pac.frequenza_mesi} mesi`} <span class="muted">${p.pac.prima_rata ? `dal ${meseAnno(p.pac.prima_rata)}` : ""}${p.pac.rate ? `, ${p.pac.rate} rate fino a ${meseAnno(finePac(p.pac))}` : ""}</span></span></li>` : ""}
     </ul>
-    <div class="spiega"><p>Fondo ad accumulazione: non stacca cedole, il guadagno resta nel valore della quota e si tassa solo quando si vende. Il valore si aggiorna una volta al giorno, con un giorno di ritardo.</p></div>
+    <div class="spiega"><p>Fondo ad accumulazione: non stacca cedole, il guadagno resta nel valore della quota e si tassa solo quando si vende. Il valore si aggiorna una volta al giorno, con un giorno di ritardo.${p.pac ? " Con il piano di accumulo quote e investito crescono a ogni rata: qui si aggiornano a ogni nuovo estratto della banca." : ""}</p></div>
   </div>`);
 }
 
@@ -470,6 +518,58 @@ function confrontoBanche(D, SV) {
   tabellaDati($("c-banche-linee"), ["Giorno", ...serie.map(s => esc(s.nome))], punti.slice().reverse().map(r => [data(r.d), ...serie.map(s => euro(r[s.k], 0))]));
 }
 
+// ---- azioni e obbligazioni ----
+// Ogni posizione ha la sua composizione (portafoglio.json, "composizione"); se manca: BTP = obbligazioni,
+// certificato a parte (è un'obbligazione di BNP, ma cedole e rimborso dipendono dalle borse).
+const CLASSI = [["obbligazioni", "Obbligazioni", "var(--m-obb)"], ["azioni", "Azioni", "var(--m-az)"], ["certificato", "Certificato", "var(--m-cert)"], ["altro", "Altro", "var(--muted)"]];
+const composizioneDi = p => p.composizione || (p.tipo === "btp" ? { obbligazioni: 1 } : p.tipo === "certificato" ? { certificato: 1 } : { altro: 1 });
+function composizione(D) {
+  const somma = pos => { const o = {}; pos.forEach(p => { const v = p.valore ?? p.carico ?? 0; for (const [k, f] of Object.entries(composizioneDi(p))) o[k] = (o[k] || 0) + v * f; }); return o; };
+  const righe = [["Totale", D.conti.flatMap(c => c.posizioni)], ...D.conti.filter(c => c.posizioni.length).map(c => [c.nome, c.posizioni])];
+  $("c-mix").innerHTML = righe.map(([nome, pos], i) => {
+    const o = somma(pos), tot = Object.values(o).reduce((s, v) => s + v, 0) || 1;
+    const cl = CLASSI.filter(([k]) => o[k] > 0);
+    return `<div class="mix"><div class="testa">${i ? esc(nome) : "<b>Tutti i conti</b>"}<span class="muted">${euro(tot, 0)}</span></div>
+      <div class="pila">${cl.map(([k, n, c]) => `<span style="--c:${c};flex:${o[k]}" data-t="${esc(nome)}|${n}|${o[k]}|${o[k] / tot}"></span>`).join("")}</div>
+      <div class="cifre">${cl.map(([k, n, c]) => `<span style="--c:${c}"><i></i>${n} ${pct(o[k] / tot)}</span>`).join("")}</div></div>`;
+  }).join("");
+  $("c-mix").querySelectorAll(".pila span").forEach(s => {
+    const [nome, n, v, f] = s.dataset.t.split("|");
+    s.addEventListener("pointermove", e => mostra(`<b>${nome}</b><br>${n}: ${euro(+v, 0)} (${pct(+f, 1)})`, e.clientX, e.clientY));
+    s.addEventListener("pointerleave", nascondi);
+  });
+  const stime = D.conti.flatMap(c => c.posizioni).filter(p => p.composizione_nota).map(p => `${p.nome}: ${p.composizione_nota}`);
+  $("sub-mix").textContent = "Al valore di oggi. " + (stime.length ? stime.join(" ") + " " : "") + "Il certificato è a parte: è un'obbligazione di BNP Paribas, ma cedole e rimborso dipendono dalle borse.";
+  tabellaDati($("c-mix"), ["Titolo", "Valore", ...CLASSI.slice(0, 3).map(c => c[1])], D.conti.flatMap(c => c.posizioni).map(p => {
+    const cp = composizioneDi(p); return [esc(p.nome), euro(p.valore, 0), ...CLASSI.slice(0, 3).map(([k]) => cp[k] ? pct(cp[k]) : "")];
+  }));
+}
+
+// ---- quando finiscono ----
+function durata(D) {
+  const oggi = oggiIso();
+  const righe = D.conti.flatMap((c, i) => c.posizioni.map(p => {
+    const colore = COLORE_CONTO[c.id] || (i ? "var(--s2)" : "var(--s1)");
+    if (p.tipo !== "fondo") return { p, c, colore, fine: p.scadenza, tipo: "scadenza", testo: `scade il ${data(p.scadenza)}` };
+    const f = fineFondo(p), pac = p.pac && finePac(p.pac);
+    const extra = pac ? ` · PAC fino a ${meseAnno(pac)}` : p.pac ? " · PAC" : "";
+    return f ? { p, c, colore, fine: f, tipo: "consigliata", testo: `consigliati ${p.detenzione_anni} anni, fino a ${meseAnno(f)}${extra}` }
+             : { p, c, colore, fine: null, tipo: "ignota", testo: `nessuna scadenza, durata consigliata non nota${extra}` };
+  })).sort((a, b) => (a.fine || "9") < (b.fine || "9") ? -1 : 1);
+  const ultimo = righe.reduce((m, r) => r.fine && r.fine > m ? r.fine : m, oggi);
+  const t0 = +new Date(oggi), t1 = +new Date((+ultimo.slice(0, 4) + 1) + "-01-01"), w = d => Math.max(0, Math.min(100, (+new Date(d) - t0) / (t1 - t0) * 100));
+  const anni = []; for (let y = +oggi.slice(0, 4) + 1; y <= +ultimo.slice(0, 4) + 1; y++) anni.push(y);
+  $("c-durata").innerHTML = righe.map((r, i) => `<div class="dur" style="--c:${r.colore}" data-i="${i}">
+      <div class="testa"><span>${esc(r.p.nome)}</span><span class="quando">${r.testo}</span></div>
+      <div class="pista${r.tipo === "ignota" ? " ignota" : ""}">${r.fine ? `<span class="bar${r.tipo === "consigliata" ? " vuota" : ""}" style="width:${w(r.fine).toFixed(2)}%"></span>` : ""}</div></div>`).join("") +
+    `<div class="anni">${anni.map(y => `<span style="left:${w(y + "-01-01").toFixed(2)}%">${y}</span>`).join("")}</div>`;
+  $("c-durata").querySelectorAll(".dur").forEach(el => {
+    const r = righe[+el.dataset.i];
+    el.addEventListener("pointermove", e => mostra(`<b>${esc(r.p.nome)}</b><br>${esc(r.c.nome)}<br>${r.testo}${r.fine ? `<br>fra ${num((+new Date(r.fine) - t0) / 864e5 / 365.25, 1)} anni` : ""}`, e.clientX, e.clientY));
+    el.addEventListener("pointerleave", nascondi);
+  });
+}
+
 function avvia(D) {
   const T = D.totali || D.totale;
   $("aggiornato").textContent = `Prezzi aggiornati il ${data(D.aggiornato)} alle ${D.aggiornato.slice(11)}`;
@@ -490,6 +590,8 @@ function avvia(D) {
   linee($("c-valore"), SV, [{ k: "totale", nome: "Totale", colore: "var(--series)" }], { fmt: v => num(v, 0) + " €", fmtTip: v => euro(v, 0) });
   tabellaDati($("c-valore"), ["Giorno", "Totale"], SV.slice().reverse().map(r => [data(r.d), euro(r.totale, 0)]));
   confrontoBanche(D, SV);
+  composizione(D);
+  durata(D);
 
   // conti
   const box = $("conti");
@@ -516,6 +618,10 @@ function avvia(D) {
     else if (p.tipo === "certificato") {
       a.osservazioni.filter(o => o.stato === "futura").slice(0, 2).forEach(o => ev.push([o.osservazione, `Osservazione cedola ${p.nome}`, `${euro(a.cedola_unitaria * p.quantita)} lordi il ${data(o.pagamento, false)} se il peggiore è ≥ 70%`]));
       ev.push([p.scadenza, `Scadenza ${p.nome}`, `rimborso ${euro(p.quantita * p.nominale_unitario, 0)} se il peggiore è ≥ 40%`]);
+    }
+    else if (p.tipo === "fondo" && p.pac) {
+      const r = prossimaRata(p.pac);
+      if (r) ev.push([r[0], `Rata PAC ${p.nome}`, `${euro(p.pac.rata, 0)}${p.pac.rate ? `, rata ${r[1]} di ${p.pac.rate}` : ""}`]);
     }
   }));
   ev.sort((a, b) => a[0] < b[0] ? -1 : 1);
