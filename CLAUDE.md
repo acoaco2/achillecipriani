@@ -25,6 +25,8 @@ Sito statico su **GitHub Pages**, dominio `achillecipriani.it`, repository **pub
 
 Prima di un push da qui fai `git pull --rebase`: la rasp committa `aco/libri/dati.json` ogni notte (`aco/sport/dati.json` ogni mattina, `aco/rasp/dati.json` fino a 3 volte al giorno, `investimenti/dati.json` e `dati-aco.json` nei giorni feriali alle 18:30).
 
+**Numeri (richiesta dell'utente, 07/11/2026):** sempre con il punto delle migliaia, anche sotto 10.000 (9.735,65 e non 9735,65). Non usare `toLocaleString("it-IT")` o `Intl.NumberFormat("it-IT")`: sotto 10.000 non raggruppano. Le pagine hanno una `num(v, d)` che formatta a mano: riusala. In Python va bene `f"{x:,.2f}"` con le virgole e i punti scambiati.
+
 ## Anteprima locale
 
 ```bash
