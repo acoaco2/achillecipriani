@@ -231,7 +231,7 @@ document.getElementById("tema").onclick = () => {
 
 // ---- formati ----
 const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
-const num = (v, d = 0) => v.toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d });
+const num = (v, d = 0) => { if (v == null) return "–"; const a = Math.abs(v).toFixed(d), [i, f] = a.split("."); return (v < 0 && +a ? "-" : "") + i.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + (f ? "," + f : ""); };  // a mano: in it-IT toLocaleString non mette il punto sotto 10.000
 const data = s => { if (!s) return ""; const [y, m, d] = s.split("-"); return `${+d} ${MESI[m - 1]} ${y}`; };
 const ore = h => h < 1 ? `${Math.round(h * 60)} min` : `${num(h, 1)} h`;
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

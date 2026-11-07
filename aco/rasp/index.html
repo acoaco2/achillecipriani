@@ -250,7 +250,7 @@ function autoAggiorna() {
 // ---- formati ----
 const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
 const GIORNI = ["domenica","lunedì","martedì","mercoledì","giovedì","venerdì","sabato"];
-const num = (v, d = 0) => v == null ? "–" : v.toLocaleString("it-IT", { minimumFractionDigits: d, maximumFractionDigits: d });
+const num = (v, d = 0) => { if (v == null) return "–"; const a = Math.abs(v).toFixed(d), [i, f] = a.split("."); return (v < 0 && +a ? "-" : "") + i.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + (f ? "," + f : ""); };  // a mano: in it-IT toLocaleString non mette il punto sotto 10.000
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const $ = id => document.getElementById(id);
 const dt = s => new Date(s.replace(" ", "T") + ":00");
