@@ -57,11 +57,6 @@ h3 { font-size: 14px; font-weight: 600; margin: 0 0 2px; }
 .muted { color: var(--muted); }
 button.theme { background: none; border: 1px solid var(--border); color: var(--ink-2); border-radius: 8px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; min-height: 32px; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-width: 0; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
-.tile .label { color: var(--ink-2); font-size: 13px; }
-.tile .value { font-size: 30px; font-weight: 600; line-height: 1.15; margin-top: 4px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.tile .value small { font-size: 15px; font-weight: 500; color: var(--ink-2); margin-left: 3px; }
-.tile .note { color: var(--muted); font-size: 12px; margin-top: 2px; }
 .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 12px; margin-top: 12px; }
 .chart { position: relative; margin-top: 8px; }
 .chart svg { display: block; width: 100%; overflow: visible; }
@@ -97,19 +92,6 @@ td .det { display: block; color: var(--muted); font-size: 12px; }
 .lista li:last-child { border-bottom: 0; }
 .lista .k { color: var(--ink-2); }
 .lista .v { text-align: right; font-variant-numeric: tabular-nums; }
-.banca { padding: 12px 0; border-bottom: 1px solid var(--grid); }
-.banca:last-of-type { border-bottom: 0; }
-.banca .testa { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; font-size: 13.5px; margin-bottom: 6px; }
-.banca .testa .nome { font-weight: 600; }
-.banca .testa .nome i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); margin-right: 7px; vertical-align: 0; }
-.banca .testa .nome span { color: var(--ink); }
-.banca .testa .quota { color: var(--muted); font-weight: 400; font-size: 12.5px; margin-left: 6px; }
-.banca .testa .ris { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.banca .riga { display: grid; grid-template-columns: 64px 1fr auto; align-items: center; gap: 10px; font-size: 12.5px; color: var(--ink-2); padding: 3px 0; cursor: default; }
-.banca .pista { position: relative; height: 14px; }
-.banca .bar { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background: var(--c); }
-.banca .bar.vuota { background: color-mix(in srgb, var(--c) 16%, transparent); border: 1.5px solid var(--c); border-left: 0; }
-.banca .val { font-variant-numeric: tabular-nums; text-align: right; min-width: 84px; color: var(--ink); white-space: nowrap; }
 .mix { padding: 10px 0; border-bottom: 1px solid var(--grid); }
 .mix:last-of-type { border-bottom: 0; }
 .mix .testa { display: flex; justify-content: space-between; gap: 4px 12px; flex-wrap: wrap; font-size: 13.5px; margin-bottom: 6px; }
@@ -142,9 +124,33 @@ td .det { display: block; color: var(--muted); font-size: 12px; }
 .errore { color: var(--bad); font-size: 13px; margin: 8px 0 0; }
 .blocco { margin-top: 20vh; text-align: center; color: var(--ink-2); font-size: 15px; }
 .blocco a { color: var(--series); }
+.sintesi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 24px; padding: 18px 20px; }
+.sintesi .label { color: var(--ink-2); font-size: 13px; }
+.sintesi .value { font-size: 30px; font-weight: 600; line-height: 1.15; margin-top: 4px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sintesi .note { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+h2 .dot { display: inline-block; width: 11px; height: 11px; border-radius: 3px; background: var(--c); margin-right: 10px; vertical-align: 0.08em; }
+.conto-testa { display: flex; flex-wrap: wrap; gap: 4px 22px; font-size: 13.5px; color: var(--ink-2); padding-bottom: 10px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+.conto-testa b { color: var(--ink); font-weight: 600; }
+details.titolo { border-bottom: 1px solid var(--grid); }
+details.titolo:last-of-type { border-bottom: 0; }
+details.titolo > summary { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr) auto 14px; gap: 16px; align-items: center; padding: 12px 6px; margin: 0 -6px; cursor: pointer; border-radius: 8px; transition: background-color .15s ease-out; }
+details.titolo > summary::-webkit-details-marker { display: none; }
+details.titolo > summary:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+details.titolo > summary:focus-visible { outline: 2px solid var(--series); outline-offset: 1px; }
+.titolo .nome { font-weight: 600; font-size: 14.5px; }
+.titolo .det { display: block; color: var(--muted); font-size: 12.5px; font-weight: 400; margin-top: 1px; }
+.titolo .cifra { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 14.5px; }
+.titolo .cifra small { display: block; font-size: 12.5px; }
+.titolo .freccia { width: 8px; height: 8px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(-45deg); transition: transform .2s ease-out; justify-self: center; }
+.titolo[open] .freccia { transform: rotate(45deg); }
+.titolo .corpo { padding: 2px 0 20px; }
+.titolo .corpo .lista { margin-top: 0; }
+.nota { font-size: 13.5px; color: var(--ink-2); margin: 10px 0 0; max-width: 72ch; }
+.piccola { color: var(--muted); font-size: 12.5px; margin: 10px 0 0; }
+@media (prefers-reduced-motion: reduce) { details.titolo > summary, .titolo .freccia { transition: none; } }
 footer { margin-top: 48px; color: var(--muted); font-size: 12px; }
 footer a { color: var(--muted); }
-@media (max-width: 520px) { .tile .value { font-size: 22px; } h2 { margin-top: 36px; } }
+@media (max-width: 520px) { .sintesi { grid-template-columns: 1fr 1fr; padding: 16px; } .sintesi > :first-child { grid-column: 1 / -1; } .sintesi .value { font-size: 22px; } h2 { margin-top: 36px; } h2 small { display: block; margin: 4px 0 0 21px; } }
 </style>
 </head>
 <body>
@@ -158,49 +164,35 @@ footer a { color: var(--muted); }
     <div><button class="theme" id="tema" type="button">Tema</button> <button class="theme" id="esci" type="button">Esci</button></div>
   </header>
 
-  <section class="tiles" id="tiles" aria-label="In sintesi"></section>
+  <section class="card sintesi" id="sintesi" aria-label="In sintesi"></section>
   <div id="errori"></div>
+
+  <h2>Prossime date</h2>
+  <div class="card"><ul class="lista" id="l-date"></ul><div id="altre-date"></div></div>
+
+  <div id="conti"></div>
 
   <h2>Andamento</h2>
   <div class="card">
-    <h3>Valore di mercato di tutti i titoli</h3>
+    <h3>Valore di tutti gli investimenti</h3>
     <div class="sub" id="sub-valore"></div>
     <div class="chart" id="c-valore"></div>
   </div>
 
-  <div class="grid2">
-    <div class="card">
-      <h3>Per conto</h3>
-      <div class="sub">Quanto è stato investito (o versato) in ciascun conto e quanto vale oggi, cedole incassate comprese.</div>
-      <div id="c-banche"></div>
-      <div class="legenda"><span><i style="background:transparent;border:1.5px solid var(--muted);height:10px"></i>Investito</span><span><i style="background:var(--muted);height:10px"></i>Oggi: valore + cedole</span></div>
-    </div>
-    <div class="card">
-      <h3>Valore di mercato per conto</h3>
-      <div class="sub" id="sub-banche"></div>
-      <div class="chart" id="c-banche-linee"></div>
-    </div>
-  </div>
-
-  <h2>Composizione e durata</h2>
+  <h2>Composizione e scadenze</h2>
   <div class="grid2">
     <div class="card">
       <h3>Azioni e obbligazioni</h3>
-      <div class="sub" id="sub-mix"></div>
+      <div class="sub">Al valore di oggi. Il certificato è a parte: cedole e rimborso dipendono dalle borse.</div>
       <div id="c-mix"></div>
     </div>
     <div class="card">
       <h3>Quando finiscono</h3>
-      <div class="sub">Da oggi alla scadenza dei titoli. I fondi non scadono: per loro c'è la durata consigliata dal documento ufficiale (KID), contata dall'acquisto.</div>
+      <div class="sub">Scadenza dei titoli; per i fondi, la durata consigliata dal KID contata dall'acquisto.</div>
       <div id="c-durata"></div>
-      <div class="legenda"><span><i style="background:var(--muted);height:10px"></i>Scadenza</span><span><i style="background:transparent;border:1.5px solid var(--muted);height:10px"></i>Durata consigliata (fondi)</span><span><i style="background:var(--s1);height:10px"></i>Mediolanum</span><span><i style="background:var(--s2);height:10px"></i>Banco BPM</span><span><i style="background:var(--s3);height:10px"></i>Mediolanum Vita</span></div>
+      <div class="legenda" id="leg-durata"></div>
     </div>
   </div>
-
-  <div id="conti"></div>
-
-  <h2>Prossime date</h2>
-  <div class="card"><ul class="lista" id="l-date"></ul></div>
 
   <footer id="fonti"></footer>
 </main>
@@ -319,7 +311,7 @@ function tabellaDati(el, intest, righe) {
   const d = document.createElement("details"); d.className = "dati";
   d.innerHTML = `<summary>Tabella</summary><div class="table-wrap"><table><tr>${intest.map((h, i) => `<th${i ? ' class="num"' : ""}>${h}</th>`).join("")}</tr>${
     righe.map(r => `<tr>${r.map((c, i) => `<td${i ? ' class="num"' : ""}>${c}</td>`).join("")}</tr>`).join("")}</table></div>`;
-  el.closest(".card").appendChild(d);
+  (el.closest(".corpo") || el.closest(".card")).appendChild(d);
 }
 const GRAFICI = [];
 function grafico(el, disegna) { GRAFICI.push([el, disegna]); disegna(el); }
@@ -377,201 +369,173 @@ function legenda(el, serie) {
   el.after(d);
 }
 
-function tile(label, valore, unita, note = "") {
-  return `<div class="card tile"><div class="label">${label}</div><div class="value">${valore}${unita ? `<small>${unita}</small>` : ""}</div>${note ? `<div class="note">${note}</div>` : ""}</div>`;
-}
 function tabella(intest, righe) {
   return `<div class="table-wrap"><table><tr>${intest.map(([h, n]) => `<th${n ? ' class="num"' : ""}>${h}</th>`).join("")}</tr>` +
     righe.map(r => `<tr>${r.map((c, i) => `<td${intest[i][1] ? ' class="num"' : ""}>${c}</td>`).join("")}</tr>`).join("") + "</table></div>";
 }
 
-// ---- schede dei prodotti ----
-function schedaBtp(p, el) {
-  const a = p.analisi;
-  el.insertAdjacentHTML("beforeend", `<div class="card">
-    <h3>${esc(p.nome)}</h3><div class="sub">Titolo di Stato italiano · ${esc(p.isin)} · ${esc(p.mercato)}</div>
-    <ul class="lista">
-      <li><span class="k">Nominale</span><span class="v">${euro(p.nominale, 0)}</span></li>
-      <li><span class="k">Acquisto</span><span class="v">${p.data_acquisto_testo ? esc(p.data_acquisto_testo) : p.acquisto_ipotesi ? `dal ${data(p.data_acquisto)} <span class="muted">(data esatta da confermare)</span>` : data(p.data_acquisto)}</span></li>
-      <li><span class="k">Cedole incassate</span><span class="v">${a.cedole_incassate_lorde == null ? "–" : `${euro(a.cedole_incassate_lorde)} lordi${p.acquisto_ipotesi ? ' <span class="muted">(al massimo)</span>' : ""}`}</span></li>
-      <li><span class="k">Prezzo</span><span class="v">${num(p.prezzo, 2)} <span class="muted">(carico ${num(p.pmc, 2)})</span></span></li>
-      <li><span class="k">Rendimento a scadenza</span><span class="v">${p.rend_netto != null ? num(p.rend_netto, 2) + "% netto" : "–"} <span class="muted">${p.rend_lordo != null ? "· " + num(p.rend_lordo, 2) + "% lordo" : ""}</span></span></li>
-      <li><span class="k">Cedola semestrale</span><span class="v">${euro(a.cedola_netta)} netti <span class="muted">(${euro(a.cedola_lorda)} lordi)</span></span></li>
-      <li><span class="k">Prossima cedola</span><span class="v">${data(a.prossima_cedola)}</span></li>
-      <li><span class="k">Scadenza</span><span class="v">${data(p.scadenza)}: rimborso di ${euro(p.nominale, 0)}</span></li>
-    </ul>
-    <div class="spiega"><p>Se lo tieni fino alla scadenza riprendi ${euro(p.nominale, 0)} qualunque cosa faccia il prezzo nel frattempo, più ${a.cedole_residue} cedole. Rispetto al carico è una plusvalenza di ${euro(a.plus_a_scadenza_lorda, 0)} lordi, tassata al 12,5%. Il prezzo di oggi conta solo se lo vendi prima.</p></div>
-  </div>`);
-}
-
-function schedaFondo(p, el) {
-  const a = p.analisi;
-  el.insertAdjacentHTML("beforeend", `<div class="card">
-    <h3>${esc(p.nome)}</h3><div class="sub">${esc(p.mercato ? p.mercato.charAt(0).toUpperCase() + p.mercato.slice(1) : "Fondo comune")} · ${esc(p.isin)}</div>
-    <ul class="lista">
-      <li><span class="k">Quote</span><span class="v">${num(p.quantita, 2)}</span></li>
-      <li><span class="k">Valore della quota</span><span class="v">${num(p.prezzo, 3)} € <span class="muted">(carico ${num(p.pmc, 3)}, del ${data(p.data_prezzo, false)})</span></span></li>
-      <li><span class="k">Valore</span><span class="v">${euro(p.valore)} <span class="muted">(carico ${euro(p.carico)})</span></span></li>
-      <li><span class="k">Guadagno ai fini fiscali</span><span class="v">${euro(a.plus_fiscale)}</span></li>
-      <li><span class="k">Tasse se lo vendi oggi</span><span class="v">circa ${euro(a.tasse_se_vendi, 0)} <span class="muted">(26%)</span></span></li>
-      <li><span class="k">Durata consigliata</span><span class="v">${p.detenzione_anni ? `${p.detenzione_anni} anni <span class="muted">(fino a ${meseAnno(fineFondo(p))})</span>` : '<span class="muted">non nota</span>'}</span></li>
-      ${p.pac ? `<li><span class="k">Piano di accumulo</span><span class="v">${euro(p.pac.rata, 0)} ${(p.pac.frequenza_mesi || 1) === 1 ? "al mese" : `ogni ${p.pac.frequenza_mesi} mesi`} <span class="muted">${p.pac.prima_rata ? `dal ${meseAnno(p.pac.prima_rata)}` : ""}${p.pac.rate ? `, ${p.pac.rate} rate fino a ${meseAnno(finePac(p.pac))}` : ""}</span></span></li>` : ""}
-    </ul>
-    <div class="spiega"><p>Fondo ad accumulazione: non stacca cedole, il guadagno resta nel valore della quota e si tassa solo quando si vende. Il valore si aggiorna una volta al giorno, con un giorno di ritardo.${p.pac ? " Con il piano di accumulo quote e investito crescono a ogni rata: qui si aggiornano a ogni nuovo estratto della banca." : ""}</p></div>
-  </div>`);
-}
-
-// pensione integrativa (PIP): quote calcolate dallo script, a partire da una schermata di Mediolanum
-function schedaPip(p, el) {
-  const a = p.analisi || {}, r = p.riferimento, v = p.versamento, b = p.bonus_scadenza;
-  const attesa = (a.in_attesa || []);
-  const mov = a.movimenti || [];
-  el.insertAdjacentHTML("beforeend", `<div class="card" style="grid-column: 1 / -1">
-    <h3>${esc(p.nome)}</h3><div class="sub">Piano individuale pensionistico di Mediolanum Vita · polizza ${esc(p.polizza)} · profilo ${esc(p.profilo)}</div>
-    <div class="grid2" style="margin-top:0">
-      <div>
-        <ul class="lista">
-          <li><span class="k">Fondo</span><span class="v">${esc(p.fondo)} <span class="muted">(azionario · ${esc(p.isin)})</span></span></li>
-          <li><span class="k">Quote</span><span class="v">${num(p.quantita, 3)} <span class="muted">(calcolate)</span></span></li>
-          <li><span class="k">Valore della quota</span><span class="v">${num(p.prezzo, 3)} € <span class="muted">(del ${data(p.data_prezzo, false)})</span></span></li>
-          <li><span class="k">Valore</span><span class="v">${euro(p.valore)}</span></li>
-          <li><span class="k">Versato</span><span class="v">${euro(p.investito, 0)} <span class="muted">(${euro(v.importo, 0)} al mese, il ${v.giorno})</span></span></li>
-          <li><span class="k">Risultato</span><span class="v">${segno(p.gp_totale, 0)} <span class="muted">${p.investito ? (p.gp_totale >= 0 ? "+" : "−") + num(Math.abs(p.gp_totale / p.investito * 100), 1) + "%" : ""}</span></span></li>
-          ${attesa.length ? `<li><span class="k">In arrivo</span><span class="v">${attesa.map(x => `${euro(x.importo, 0)} del ${data(x.data, false)}`).join(", ")} <span class="muted">(non ancora contati)</span></span></li>` : ""}
-          ${b ? `<li><span class="k">Bonus a scadenza</span><span class="v">circa ${euro(b.importo, 0)} <span class="muted">nel ${p.scadenza.slice(0, 4)}, escluso dal valore</span></span></li>` : ""}
-          <li><span class="k">Fine dei versamenti</span><span class="v">${data(p.scadenza)}</span></li>
-        </ul>
-      </div>
-      <div class="spiega">
-        <p><b>Come si calcola.</b> Ogni versamento, tolto il caricamento del ${num(v.caricamento * 100)}%, compra quote del fondo al valore del primo giorno lavorativo dopo l'addebito. Si parte dal valore indicato da Mediolanum per il ${data(r.data)} (${euro(r.valore)})${a.riferimento_stimato ? ", per ora con il valore della quota più vicino" : ""}, poi lo script aggiunge da solo le rate mensili e i versamenti extra. Il valore della quota arriva da Quantalys con qualche giorno di ritardo; le spese di gestione del fondo (2,95% l'anno) sono già dentro.</p>
-        <p>A fine anno Mediolanum toglie l'imposta del 20% sui rendimenti dell'anno, quindi a gennaio le quote vanno riallineate con una schermata nuova. Il bonus a scadenza restituisce i caricamenti con gli interessi, ma solo nel ${p.scadenza.slice(0, 4)} e come se si versasse fino ad allora. I soldi non si possono ritirare come un fondo: si riscuotono alla pensione, salvo gli anticipi previsti dal contratto.</p>
-      </div>
-    </div>
-    ${mov.length ? `<details class="dati"><summary>Versamenti contati dopo il ${data(r.data, false)}</summary>${tabella([["Versamento"], ["Importo", 1], ["Valore quota", 1], ["Quote", 1]],
-      mov.slice().reverse().map(m => [`${data(m.addebito)}${m.tipo === "extra" ? ' <span class="muted">(extra)</span>' : ""}`, euro(m.importo, 0), `${num(m.prezzo, 3)} € <span class="muted">del ${data(m.valorizzazione, false)}</span>`, num(m.quote, 3)]))}</details>` : ""}
-  </div>`);
-}
-
-function schedaCertificato(p, el) {
-  const a = p.analisi, w = a.peggiore;
-  const sc = x => Math.min(100, Math.max(0, x / 1.4 * 100));   // metro da 0% a 140% dello strike
-  const id = "c-" + p.id;
-  const statoOss = o => o.stato === "pagata" ? `<span class="stato ok">✓ pagata${o.cedole > 1 ? ` (×${o.cedole})` : ""}</span>`
-    : o.stato === "non pagata" ? `<span class="stato ko">✗ non pagata, in memoria</span>`
-    : o.stato === "futura" ? `<span class="stato fut">da osservare</span>` : `<span class="stato fut">dato mancante</span>`;
-  el.insertAdjacentHTML("beforeend", `<div class="card" style="grid-column: 1 / -1">
-    <h3>${esc(p.nome)}</h3><div class="sub">Certificato di ${esc(p.emittente)} · ${esc(p.isin)} · ${esc(p.mercato)}</div>
-    <div class="grid2" style="margin-top:0">
-      <div>
-        <ul class="lista">
-          <li><span class="k">Certificati</span><span class="v">${p.quantita} da ${euro(p.nominale_unitario, 0)} · ${euro(p.investito, 0)} investiti il ${data(p.data_acquisto)}</span></li>
-          <li><span class="k">Prezzo</span><span class="v">${num(p.prezzo, 2)} <span class="muted">su ${num(p.nominale_unitario)}</span></span></li>
-          <li><span class="k">Cedole incassate</span><span class="v">${a.cedole_pagate} × ${euro(a.cedola_unitaria * p.quantita)} = ${euro(a.cedole_incassate_lorde)} lordi</span></li>
-          <li><span class="k">Prossima osservazione</span><span class="v">${a.prossima ? `${data(a.prossima.osservazione)} <span class="muted">(pagamento ${data(a.prossima.pagamento, false)})</span>` : "–"}</span></li>
-          <li><span class="k">A scadenza, se va tutto bene</span><span class="v">${euro(a.a_scadenza_se_tutto_bene, 0)} <span class="muted">il ${data(p.scadenza)}</span></span></li>
-        </ul>
-      </div>
-      <div>
-        <div class="sub" style="margin:4px 0 0">Il sottostante peggiore oggi (${esc(a.sottostanti.reduce((m, s) => s.perc < m.perc ? s : m).nome)}) è al <b>${pct(w, 1)}</b> del livello iniziale</div>
-        <div class="metro" aria-hidden="true">
-          <div class="barra">
-            <div class="zona bad" style="left:0;width:${sc(p.barriera_capitale)}%"></div>
-            <div class="zona warn" style="left:${sc(p.barriera_capitale)}%;width:${sc(p.barriera_cedola) - sc(p.barriera_capitale)}%"></div>
-            ${w != null ? `<div class="punto" style="left:${sc(w)}%"></div>` : ""}
-          </div>
-          <div class="tacche">
-            <span style="left:${sc(p.barriera_capitale)}%">40%<br>capitale</span>
-            <span style="left:${sc(p.barriera_cedola)}%">70%<br>cedola</span>
-            <span style="left:${sc(1)}%">100%<br>iniziale</span>
-          </div>
-        </div>
-        <div class="sub">${w != null ? `Per perdere la cedola il peggiore dovrebbe scendere ancora del ${num((1 - p.barriera_cedola / w) * 100, 0)}%; per toccare il capitale, del ${num((1 - p.barriera_capitale / w) * 100, 0)}%.` : ""}</div>
-      </div>
-    </div>
-    <h3 style="margin-top:18px">I due indici rispetto al livello iniziale</h3>
-    <div class="sub">100% = livello del ${data(p.data_strike)}. Conta sempre il peggiore dei due.</div>
-    <div class="chart" id="${id}"></div>
-    <div class="spiega" style="margin-top:14px">
-      <p><b>Come funziona.</b> Ogni tre mesi si guardano Euro Stoxx 50 ed Euro Stoxx Banks: se <i>entrambi</i> sono almeno al 70% del livello iniziale arriva una cedola dell'${num(p.cedola_pct, 2)}% (${euro(a.cedola_unitaria * p.quantita)} lordi per ${p.quantita} certificati, circa il ${num(p.cedola_pct * 4, 1)}% l'anno). Se no salta, ma resta in memoria e si recupera alla prima osservazione buona.</p>
-      <p>A scadenza (${data(p.scadenza)}) si riprendono ${euro(p.nominale_unitario, 0)} per certificato se il peggiore è almeno al 40%. Sotto il 40% si perde quanto ha perso l'indice peggiore. Non c'è rimborso anticipato e il capitale dipende anche da BNP Paribas. Venderlo prima si può, sul mercato, al prezzo del giorno: il prezzo sotto 1.000 sconta anche i costi d'ingresso (${num(p.costi_ingresso_pct, 1)}%) già pagati all'acquisto.</p>
-    </div>
-    <details class="dati"><summary>Calendario delle cedole</summary>
-      ${tabella([["Osservazione"], ["Pagamento", 1], ["Peggiore", 1], ["Esito", 1], ["Lordo", 1]], a.osservazioni.map(o => [
-        data(o.osservazione), data(o.pagamento), o.peggiore != null ? pct(o.peggiore, 1) : (o.fonte === "banca" ? '<span class="muted">dalla banca</span>' : "–"),
-        statoOss(o), o.importo ? euro(o.importo) : "–"]))}
-    </details>
-  </div>`);
-  const serie = a.sottostanti.map((s, i) => ({ k: s.codice, nome: s.nome, colore: i ? "var(--s2)" : "var(--s1)" }));
-  const el2 = $(id);
-  const lo = Math.min(p.barriera_capitale, ...a.serie.flatMap(r => serie.map(s => r[s.k]).filter(v => v != null)));
-  linee(el2, a.serie, serie, { h: 260, min: Math.min(0.3, lo), fmt: v => num(v * 100) + "%", fmtTip: v => num(v * 100, 1) + "%",
-    rif: [{ v: 1, testo: "", cls: "neu" }, { v: p.barriera_cedola, testo: "70% cedola", cls: "warn" }, { v: p.barriera_capitale, testo: "40% capitale", cls: "bad" }] });
-  legenda(el2, serie);
-  tabellaDati(el2, ["Giorno", ...serie.map(s => esc(s.nome))], a.serie.slice().reverse().map(r => [data(r.d), ...serie.map(s => r[s.k] == null ? "–" : pct(r[s.k], 1))]));
-}
-
-// ---- confronto fra le banche ----
+// ---- colori e tipi ----
 // Il colore segue il conto (non l'ordine): Mediolanum s1, Banco BPM s2, Mediolanum Vita (pensione integrativa) s3.
 const COLORE_CONTO = { mediolanum: "var(--s1)", bpm: "var(--s2)", "mediolanum-vita": "var(--s3)" };
-const nomeBreve = c => c.nome.replace(/^Banc[ao] /, "");
-function confrontoBanche(D, SV) {
-  const conti = D.conti.filter(c => c.posizioni.length).map((c, i) => {
-    const investito = c.posizioni.reduce((s, p) => s + (p.investito || 0), 0);
-    const cedole = c.posizioni.reduce((s, p) => s + (p.cedole || 0), 0);
-    return { c, colore: COLORE_CONTO[c.id] || (i ? "var(--s2)" : "var(--s1)"), investito, cedole, valore: c.valore, oggi: c.valore + cedole, ris: c.valore + cedole - investito };
-  });
-  if (!conti.length) { $("c-banche").innerHTML = '<p class="vuoto">Ancora nessun titolo caricato.</p>'; return; }
-  const totInv = conti.reduce((s, x) => s + x.investito, 0);
-  const scala = Math.max(...conti.flatMap(x => [x.investito, x.oggi]));
-  const w = v => (v / scala * 100).toFixed(2) + "%";
-  const percRis = x => x.investito ? (x.ris >= 0 ? "+" : "−") + num(Math.abs(x.ris / x.investito * 100), 1) + "%" : "";
-  $("c-banche").innerHTML = conti.map((x, i) => `<div class="banca" style="--c:${x.colore}">
-      <div class="testa"><span class="nome"><i></i><span>${esc(x.c.nome)}</span><span class="quota">${pct(x.investito / totInv)} dell'investito</span></span>
-        <span class="ris">${segno(x.ris, 0)} <span class="muted">${percRis(x)}</span></span></div>
-      <div class="riga" data-i="${i}"><span>Investito</span><span class="pista"><span class="bar vuota" style="width:${w(x.investito)}"></span></span><span class="val">${euro(x.investito, 0)}</span></div>
-      <div class="riga" data-i="${i}"><span>Oggi</span><span class="pista"><span class="bar" style="width:${w(x.oggi)}"></span></span><span class="val">${euro(x.oggi, 0)}</span></div>
-    </div>`).join("");
-  $("c-banche").querySelectorAll(".riga").forEach(r => {
-    const x = conti[+r.dataset.i];
-    r.addEventListener("pointermove", e => mostra(`<b>${esc(x.c.nome)}</b><br>Investito: ${euro(x.investito, 0)}<br>Valore di mercato: ${euro(x.valore, 0)}<br>Cedole incassate: ${euro(x.cedole, 0)} lorde<br>Risultato: ${segno(x.ris, 0)} ${percRis(x)}`, e.clientX, e.clientY));
-    r.addEventListener("pointerleave", nascondi);
-  });
-  tabellaDati($("c-banche"), ["Banca", "Investito", "Valore", "Cedole", "Risultato"],
-    conti.map(x => [esc(x.c.nome), euro(x.investito, 0), euro(x.valore, 0), euro(x.cedole, 0), `${segno(x.ris, 0)} ${percRis(x)}`]));
-
-  // valore di mercato per banca nel tempo: somma delle posizioni di ogni conto in serie_valore
-  const serie = conti.map(x => ({ k: x.c.id, nome: nomeBreve(x.c), colore: x.colore }));
-  const punti = SV.map(r => ({ d: r.d, ...Object.fromEntries(conti.map(x => [x.c.id, Math.round(x.c.posizioni.reduce((s, p) => s + (r[p.id] || 0), 0))])) }));
-  $("sub-banche").textContent = "Senza cedole: le cedole incassate sono nel confronto qui accanto. " +
-    (SV.length < 10 ? `Lo storico parte dal ${data(SV[0].d)}.` : `Dal ${data(SV[0].d)}.`);
-  linee($("c-banche-linee"), punti, serie, { fmt: v => num(v, 0) + " €", fmtTip: v => euro(v, 0), destra: 78 });
-  legenda($("c-banche-linee"), serie);
-  tabellaDati($("c-banche-linee"), ["Giorno", ...serie.map(s => esc(s.nome))], punti.slice().reverse().map(r => [data(r.d), ...serie.map(s => euro(r[s.k], 0))]));
-}
-
-// ---- azioni e obbligazioni ----
+const coloreConto = (c, i) => COLORE_CONTO[c.id] || ["var(--s1)", "var(--s2)", "var(--s3)"][i % 3];
 // Ogni posizione ha la sua composizione (portafoglio.json, "composizione"); se manca: BTP = obbligazioni,
 // certificato a parte (è un'obbligazione di BNP, ma cedole e rimborso dipendono dalle borse).
 const CLASSI = [["obbligazioni", "Obbligazioni", "var(--m-obb)"], ["azioni", "Azioni", "var(--m-az)"], ["certificato", "Certificato", "var(--m-cert)"], ["altro", "Altro", "var(--muted)"]];
 const composizioneDi = p => p.composizione || (p.tipo === "btp" ? { obbligazioni: 1 } : p.tipo === "certificato" ? { certificato: 1 } : { altro: 1 });
+const percRis = (ris, base) => base ? (ris >= 0 ? "+" : "−") + num(Math.abs(ris / base * 100), 1) + "%" : "";
+const riga = (k, v) => `<li><span class="k">${k}</span><span class="v">${v}</span></li>`;
+const acquisto = p => p.data_acquisto_testo ? esc(p.data_acquisto_testo)
+  : p.acquisto_ipotesi ? `dal ${data(p.data_acquisto)} <span class="muted">(da confermare)</span>` : data(p.data_acquisto);
+
+// ---- riga di un titolo: sempre visibile; il dettaglio si apre al clic ----
+function descrizione(p) {
+  if (p.tipo === "btp") return `Titolo di Stato · scade ${meseAnno(p.scadenza)}`;
+  if (p.tipo === "pip") return `Piano pensionistico (PIP) · versamenti fino al ${p.scadenza.slice(0, 4)}`;
+  if (p.tipo === "certificato") {
+    const w = p.analisi && p.analisi.peggiore;
+    return `Certificato · ${w != null ? `indice peggiore al ${pct(w)}, la cedola arriva sopra il 70%` : `scade ${meseAnno(p.scadenza)}`}`;
+  }
+  const az = composizioneDi(p).azioni || 0, ob = composizioneDi(p).obbligazioni || 0;
+  return "Fondo" + (az >= 0.8 ? " azionario" : ob >= 0.8 ? " obbligazionario" : az || ob ? " bilanciato" : "");
+}
+
+function corpoBtp(p) {
+  const a = p.analisi;
+  return `<ul class="lista">
+    ${riga("Nominale", euro(p.nominale, 0))}
+    ${riga("Acquisto", acquisto(p))}
+    ${riga("Prezzo", `${num(p.prezzo, 2)} <span class="muted">(pagato ${num(p.pmc, 2)})</span>`)}
+    ${riga("Rendimento fino alla scadenza", p.rend_netto != null ? num(p.rend_netto, 2) + "% netto l'anno" : "–")}
+    ${riga("Cedola", `${euro(a.cedola_netta)} netti ogni sei mesi · prossima il ${data(a.prossima_cedola)}`)}
+    ${riga("Cedole incassate", a.cedole_incassate_lorde == null ? "–" : `${euro(a.cedole_incassate_lorde)} lordi${p.acquisto_ipotesi ? ' <span class="muted">(al massimo)</span>' : ""}`)}
+    ${riga("Scadenza", `${data(p.scadenza)}: rimborso di ${euro(p.nominale, 0)}`)}
+  </ul>
+  <p class="nota">Se lo tieni fino alla scadenza riprendi ${euro(p.nominale, 0)} più ${a.cedole_residue} cedole, qualunque cosa faccia il prezzo. Il prezzo di oggi conta solo se lo vendi prima.</p>`;
+}
+
+function corpoFondo(p) {
+  const a = p.analisi;
+  return `<ul class="lista">
+    ${riga("Quote", num(p.quantita, 3))}
+    ${riga("Valore della quota", `${num(p.prezzo, 3)} € <span class="muted">del ${data(p.data_prezzo, false)} · pagata in media ${num(p.pmc, 3)} €</span>`)}
+    ${riga("Acquisto", acquisto(p))}
+    ${riga("Durata consigliata", p.detenzione_anni ? `${p.detenzione_anni} anni, fino a ${meseAnno(fineFondo(p))}` : '<span class="muted">non nota</span>')}
+    ${riga("Tasse se lo vendi oggi", `circa ${euro(a.tasse_se_vendi, 0)} <span class="muted">(26% del guadagno)</span>`)}
+    ${p.pac ? riga("Piano di accumulo", `${euro(p.pac.rata, 0)} ${(p.pac.frequenza_mesi || 1) === 1 ? "al mese" : `ogni ${p.pac.frequenza_mesi} mesi`}${p.pac.rate ? ` fino a ${meseAnno(finePac(p.pac))}` : ""}`) : ""}
+  </ul>
+  <p class="nota">Non stacca cedole: il guadagno resta nel valore della quota e si tassa solo quando vendi.</p>`;
+}
+
+function corpoPip(p) {
+  const a = p.analisi || {}, r = p.riferimento, v = p.versamento, b = p.bonus_scadenza;
+  const attesa = a.in_attesa || [], mov = a.movimenti || [];
+  return `<ul class="lista">
+    ${riga("Fondo", `${esc(p.fondo)} <span class="muted">(azionario)</span>`)}
+    ${riga("Quote", `${num(p.quantita, 3)} <span class="muted">· quota a ${num(p.prezzo, 3)} € del ${data(p.data_prezzo, false)}</span>`)}
+    ${riga("Versato", `${euro(p.investito, 0)} <span class="muted">· ${euro(v.importo, 0)} al mese, il ${v.giorno}</span>`)}
+    ${attesa.length ? riga("In arrivo", `${attesa.map(x => `${euro(x.importo, 0)} del ${data(x.data, false)}`).join(", ")} <span class="muted">(non ancora contati)</span>`) : ""}
+    ${b ? riga("Bonus a scadenza", `circa ${euro(b.importo, 0)} nel ${p.scadenza.slice(0, 4)} <span class="muted">(non è nel valore)</span>`) : ""}
+    ${riga("Fine dei versamenti", data(p.scadenza))}
+  </ul>
+  <p class="nota">Le quote sono calcolate: si parte dal valore di Mediolanum del ${data(r.data)}${a.riferimento_stimato ? " (per ora con la quota del giorno più vicino)" : ""} e si aggiunge ogni versamento, tolto il 3% di caricamento. A gennaio vanno riallineate con una schermata nuova, perché Mediolanum toglie l'imposta dell'anno. Si riscuote alla pensione, salvo gli anticipi previsti dal contratto.</p>
+  ${mov.length ? `<details class="dati"><summary>Versamenti contati dopo il ${data(r.data, false)}</summary>${tabella([["Versamento"], ["Importo", 1], ["Quota", 1], ["Quote", 1]],
+    mov.slice().reverse().map(m => [`${data(m.addebito)}${m.tipo === "extra" ? ' <span class="muted">(extra)</span>' : ""}`, euro(m.importo, 0), `${num(m.prezzo, 3)} €`, num(m.quote, 3)]))}</details>` : ""}`;
+}
+
+function corpoCertificato(p) {
+  const a = p.analisi, w = a.peggiore;
+  const sc = x => Math.min(100, Math.max(0, x / 1.4 * 100));   // metro da 0% a 140% dello strike
+  const statoOss = o => o.stato === "pagata" ? `<span class="stato ok">✓ pagata${o.cedole > 1 ? ` (×${o.cedole})` : ""}</span>`
+    : o.stato === "non pagata" ? `<span class="stato ko">✗ non pagata, in memoria</span>`
+    : o.stato === "futura" ? `<span class="stato fut">da osservare</span>` : `<span class="stato fut">dato mancante</span>`;
+  const peggiore = a.sottostanti.reduce((m, s) => s.perc < m.perc ? s : m);
+  return `<ul class="lista">
+    ${riga("Certificati", `${p.quantita} da ${euro(p.nominale_unitario, 0)}, emessi il ${data(p.data_acquisto)}`)}
+    ${riga("Prezzo", `${num(p.prezzo, 2)} <span class="muted">su ${num(p.nominale_unitario)}</span>`)}
+    ${riga("Cedole incassate", `${a.cedole_pagate}, in tutto ${euro(a.cedole_incassate_lorde)} lordi`)}
+    ${riga("Prossima osservazione", a.prossima ? `${data(a.prossima.osservazione)} <span class="muted">(pagamento ${data(a.prossima.pagamento, false)})</span>` : "–")}
+    ${riga("A scadenza, se va tutto bene", `${euro(a.a_scadenza_se_tutto_bene, 0)} il ${data(p.scadenza)}`)}
+  </ul>
+  <div class="sub" style="margin:18px 0 0">Oggi l'indice peggiore (${esc(peggiore.nome)}) è al <b>${pct(w, 1)}</b> del livello iniziale.</div>
+  <div class="metro" aria-hidden="true">
+    <div class="barra">
+      <div class="zona bad" style="left:0;width:${sc(p.barriera_capitale)}%"></div>
+      <div class="zona warn" style="left:${sc(p.barriera_capitale)}%;width:${sc(p.barriera_cedola) - sc(p.barriera_capitale)}%"></div>
+      ${w != null ? `<div class="punto" style="left:${sc(w)}%"></div>` : ""}
+    </div>
+    <div class="tacche">
+      <span style="left:${sc(p.barriera_capitale)}%">40%<br>capitale</span>
+      <span style="left:${sc(p.barriera_cedola)}%">70%<br>cedola</span>
+      <span style="left:${sc(1)}%">100%<br>iniziale</span>
+    </div>
+  </div>
+  <p class="nota">Ogni tre mesi arriva una cedola di ${euro(a.cedola_unitaria * p.quantita)} lordi se Euro Stoxx 50 ed Euro Stoxx Banks sono entrambi almeno al 70% del livello iniziale; se salta resta in memoria. A scadenza si riprendono ${euro(p.nominale_unitario, 0)} a certificato se il peggiore è almeno al 40%, sotto si perde quanto ha perso l'indice.</p>
+  <h3 style="margin-top:20px">I due indici rispetto al livello iniziale</h3>
+  <div class="chart" id="c-${esc(p.id)}"></div>
+  <details class="dati"><summary>Calendario delle cedole</summary>
+    ${tabella([["Osservazione"], ["Pagamento", 1], ["Peggiore", 1], ["Esito", 1], ["Lordo", 1]], a.osservazioni.map(o => [
+      data(o.osservazione), data(o.pagamento), o.peggiore != null ? pct(o.peggiore, 1) : (o.fonte === "banca" ? '<span class="muted">dalla banca</span>' : "–"),
+      statoOss(o), o.importo ? euro(o.importo) : "–"]))}
+  </details>`;
+}
+
+function graficoCertificato(p) {
+  const a = p.analisi, el = $("c-" + p.id);
+  if (!el) return;
+  const serie = a.sottostanti.map((s, i) => ({ k: s.codice, nome: s.nome, colore: i ? "var(--s2)" : "var(--s1)" }));
+  const lo = Math.min(p.barriera_capitale, ...a.serie.flatMap(r => serie.map(s => r[s.k]).filter(v => v != null)));
+  linee(el, a.serie, serie, { h: 240, min: Math.min(0.3, lo), fmt: v => num(v * 100) + "%", fmtTip: v => num(v * 100, 1) + "%",
+    rif: [{ v: 1, testo: "", cls: "neu" }, { v: p.barriera_cedola, testo: "70% cedola", cls: "warn" }, { v: p.barriera_capitale, testo: "40% capitale", cls: "bad" }] });
+  legenda(el, serie);
+}
+
+const CORPO = { btp: corpoBtp, fondo: corpoFondo, pip: corpoPip, certificato: corpoCertificato };
+
+function conto(c, i, box) {
+  const colore = coloreConto(c, i);
+  const sez = document.createElement("section");
+  sez.innerHTML = `<h2><i class="dot" style="--c:${colore}"></i>${esc(c.nome)}<small>${esc(c.dettaglio || "")}</small></h2>`;
+  box.appendChild(sez);
+  if (!c.posizioni.length) { sez.insertAdjacentHTML("beforeend", `<div class="card"><p class="vuoto">Ancora niente: i titoli compariranno qui appena caricati.</p></div>`); return; }
+  const inv = c.posizioni.reduce((s, p) => s + (p.investito || 0), 0);
+  const ced = c.posizioni.reduce((s, p) => s + (p.cedole || 0), 0);
+  const ris = c.valore + ced - inv;
+  const pip = c.posizioni.every(p => p.tipo === "pip");
+  const card = document.createElement("div"); card.className = "card"; sez.appendChild(card);
+  card.innerHTML = `<div class="conto-testa"><span>${pip ? "Versato" : "Investito"} <b>${euro(inv, 0)}</b></span><span>Valore <b>${euro(c.valore, 0)}</b></span>${ced ? `<span>Cedole <b>${euro(ced, 0)}</b></span>` : ""}<span>Risultato <b>${segno(ris, 0)}</b> <span class="muted">${percRis(ris, inv)}</span></span></div>`;
+  c.posizioni.forEach(p => {
+    const d = document.createElement("details"); d.className = "titolo";
+    d.innerHTML = `<summary>
+        <span><span class="nome">${esc(p.nome)}</span><span class="det">${descrizione(p)}${p.errore ? ' · <span class="neg">prezzo non aggiornato</span>' : ""}</span></span>
+        <span class="cifra">${euro(p.valore)}<small>${segno(p.gp_totale)} <span class="muted">${percRis(p.gp_totale || 0, p.investito)}</span></small></span>
+        <span class="freccia" aria-hidden="true"></span>
+      </summary><div class="corpo">${(CORPO[p.tipo] || (() => ""))(p)}</div>`;
+    card.appendChild(d);
+    // i grafici dentro un dettaglio chiuso non hanno larghezza: si disegnano (o ridisegnano) all'apertura
+    let fatto = false;
+    d.addEventListener("toggle", () => {
+      if (!d.open) return;
+      if (!fatto && p.tipo === "certificato") { fatto = true; graficoCertificato(p); }
+      else GRAFICI.forEach(([el, f]) => d.contains(el) && f(el));
+    });
+  });
+  card.insertAdjacentHTML("beforeend", `<p class="piccola">Risultato = valore + cedole incassate (lorde) − ${pip ? "versato" : "investito"}. Tocca un titolo per i dettagli.</p>`);
+}
+
+// ---- azioni e obbligazioni (solo il totale) ----
 function composizione(D) {
-  const somma = pos => { const o = {}; pos.forEach(p => { const v = p.valore ?? p.carico ?? 0; for (const [k, f] of Object.entries(composizioneDi(p))) o[k] = (o[k] || 0) + v * f; }); return o; };
-  const righe = [["Totale", D.conti.flatMap(c => c.posizioni)], ...D.conti.filter(c => c.posizioni.length).map(c => [c.nome, c.posizioni])];
-  $("c-mix").innerHTML = righe.map(([nome, pos], i) => {
-    const o = somma(pos), tot = Object.values(o).reduce((s, v) => s + v, 0) || 1;
-    const cl = CLASSI.filter(([k]) => o[k] > 0);
-    return `<div class="mix"><div class="testa">${i ? esc(nome) : "<b>Tutti i conti</b>"}<span class="muted">${euro(tot, 0)}</span></div>
-      <div class="pila">${cl.map(([k, n, c]) => `<span style="--c:${c};flex:${o[k]}" data-t="${esc(nome)}|${n}|${o[k]}|${o[k] / tot}"></span>`).join("")}</div>
-      <div class="cifre">${cl.map(([k, n, c]) => `<span style="--c:${c}"><i></i>${n} ${pct(o[k] / tot)}</span>`).join("")}</div></div>`;
-  }).join("");
+  const tutte = D.conti.flatMap(c => c.posizioni), o = {};
+  tutte.forEach(p => { const v = p.valore ?? p.carico ?? 0; for (const [k, f] of Object.entries(composizioneDi(p))) o[k] = (o[k] || 0) + v * f; });
+  const tot = Object.values(o).reduce((s, v) => s + v, 0) || 1;
+  const cl = CLASSI.filter(([k]) => o[k] > 0);
+  $("c-mix").innerHTML = `<div class="mix"><div class="pila">${cl.map(([k, n, c]) => `<span style="--c:${c};flex:${o[k]}" data-t="${n}|${o[k]}|${o[k] / tot}"></span>`).join("")}</div>
+    <div class="cifre">${cl.map(([k, n, c]) => `<span style="--c:${c}"><i></i>${n} ${pct(o[k] / tot)} · ${euro(o[k], 0)}</span>`).join("")}</div></div>`;
   $("c-mix").querySelectorAll(".pila span").forEach(s => {
-    const [nome, n, v, f] = s.dataset.t.split("|");
-    s.addEventListener("pointermove", e => mostra(`<b>${nome}</b><br>${n}: ${euro(+v, 0)} (${pct(+f, 1)})`, e.clientX, e.clientY));
+    const [n, v, f] = s.dataset.t.split("|");
+    s.addEventListener("pointermove", e => mostra(`<b>${n}</b><br>${euro(+v, 0)} (${pct(+f, 1)})`, e.clientX, e.clientY));
     s.addEventListener("pointerleave", nascondi);
   });
-  const stime = D.conti.flatMap(c => c.posizioni).filter(p => p.composizione_nota).map(p => `${p.nome}: ${p.composizione_nota}`);
-  $("sub-mix").textContent = "Al valore di oggi. " + (stime.length ? stime.join(" ") + " " : "") + "Il certificato è a parte: è un'obbligazione di BNP Paribas, ma cedole e rimborso dipendono dalle borse.";
-  tabellaDati($("c-mix"), ["Titolo", "Valore", ...CLASSI.slice(0, 3).map(c => c[1])], D.conti.flatMap(c => c.posizioni).map(p => {
+  tabellaDati($("c-mix"), ["Titolo", "Valore", ...CLASSI.slice(0, 3).map(c => c[1])], tutte.map(p => {
     const cp = composizioneDi(p); return [esc(p.nome), euro(p.valore, 0), ...CLASSI.slice(0, 3).map(([k]) => cp[k] ? pct(cp[k]) : "")];
   }));
 }
@@ -580,17 +544,17 @@ function composizione(D) {
 function durata(D) {
   const oggi = oggiIso();
   const righe = D.conti.flatMap((c, i) => c.posizioni.map(p => {
-    const colore = COLORE_CONTO[c.id] || (i ? "var(--s2)" : "var(--s1)");
-    if (p.tipo === "pip") return { p, c, colore, fine: p.scadenza, tipo: "scadenza", testo: `pensione: fine dei versamenti il ${data(p.scadenza)}` };
+    const colore = coloreConto(c, i);
+    if (p.tipo === "pip") return { p, c, colore, fine: p.scadenza, tipo: "scadenza", testo: `pensione, fine versamenti ${meseAnno(p.scadenza)}` };
     if (p.tipo !== "fondo") return { p, c, colore, fine: p.scadenza, tipo: "scadenza", testo: `scade il ${data(p.scadenza)}` };
-    const f = fineFondo(p), pac = p.pac && finePac(p.pac);
-    const extra = pac ? ` · PAC fino a ${meseAnno(pac)}` : p.pac ? " · PAC" : "";
-    return f ? { p, c, colore, fine: f, tipo: "consigliata", testo: `consigliati ${p.detenzione_anni} anni, fino a ${meseAnno(f)}${extra}` }
-             : { p, c, colore, fine: null, tipo: "ignota", testo: `nessuna scadenza, durata consigliata non nota${extra}` };
+    const f = fineFondo(p);
+    return f ? { p, c, colore, fine: f, tipo: "consigliata", testo: `consigliati ${p.detenzione_anni} anni, fino a ${meseAnno(f)}` }
+             : { p, c, colore, fine: null, tipo: "ignota", testo: "durata consigliata non nota" };
   })).sort((a, b) => (a.fine || "9") < (b.fine || "9") ? -1 : 1);
   const ultimo = righe.reduce((m, r) => r.fine && r.fine > m ? r.fine : m, oggi);
   const t0 = +new Date(oggi), t1 = +new Date((+ultimo.slice(0, 4) + 1) + "-01-01"), w = d => Math.max(0, Math.min(100, (+new Date(d) - t0) / (t1 - t0) * 100));
-  const anni = []; for (let y = +oggi.slice(0, 4) + 1; y <= +ultimo.slice(0, 4) + 1; y++) anni.push(y);
+  const passo = +ultimo.slice(0, 4) - +oggi.slice(0, 4) > 12 ? 5 : 1;
+  const anni = []; for (let y = +oggi.slice(0, 4) + 1; y <= +ultimo.slice(0, 4) + 1; y++) if (y % passo === 0) anni.push(y);
   $("c-durata").innerHTML = righe.map((r, i) => `<div class="dur" style="--c:${r.colore}" data-i="${i}">
       <div class="testa"><span>${esc(r.p.nome)}</span><span class="quando">${r.testo}</span></div>
       <div class="pista${r.tipo === "ignota" ? " ignota" : ""}">${r.fine ? `<span class="bar${r.tipo === "consigliata" ? " vuota" : ""}" style="width:${w(r.fine).toFixed(2)}%"></span>` : ""}</div></div>`).join("") +
@@ -600,60 +564,23 @@ function durata(D) {
     el.addEventListener("pointermove", e => mostra(`<b>${esc(r.p.nome)}</b><br>${esc(r.c.nome)}<br>${r.testo}${r.fine ? `<br>fra ${num((+new Date(r.fine) - t0) / 864e5 / 365.25, 1)} anni` : ""}`, e.clientX, e.clientY));
     el.addEventListener("pointerleave", nascondi);
   });
+  $("leg-durata").innerHTML = D.conti.filter(c => c.posizioni.length).map((c, i) => `<span><i style="background:${coloreConto(c, D.conti.indexOf(c))};height:10px"></i>${esc(c.nome)}</span>`).join("") +
+    `<span><i style="background:transparent;border:1.5px solid var(--muted);height:10px"></i>Fondi: durata consigliata</span>`;
 }
 
-function avvia(D) {
-  const T = D.totali || D.totale;
-  $("aggiornato").textContent = `Prezzi aggiornati il ${data(D.aggiornato)} alle ${D.aggiornato.slice(11)}`;
-  const gp = T.valore + T.cedole - T.investito;
-  $("tiles").innerHTML =
-    tile("Valore oggi", num(T.valore, 0), "€", "prezzi di mercato, senza ratei") +
-    tile("Investito", num(T.investito, 0), "€", "quanto è stato speso per comprare") +
-    tile("Cedole incassate", num(T.cedole, 0), "€", "lorde, dall'acquisto") +
-    tile("Risultato", (gp >= 0 ? "+" : "−") + num(Math.abs(gp), 0), "€", `valore + cedole − investito · ${(gp >= 0 ? "+" : "−") + num(Math.abs(gp / T.investito * 100), 1)}%`);
-  const errori = [...(D.errori || []), ...D.conti.flatMap(c => c.posizioni.filter(p => p.errore).map(p => `${p.nome}: ${p.errore}`))];
-  if (errori.length) $("errori").innerHTML = `<p class="errore">Dati non aggiornati: ${errori.map(esc).join(" · ")}</p>`;
-
-  // andamento del valore
-  const SV = D.serie_valore;
-  $("sub-valore").textContent = SV.length < 10
-    ? `Lo storico dei prezzi parte dal ${data(SV[0].d)} e si allunga di un punto ogni giorno di borsa.`
-    : `Dal ${data(SV[0].d)}, un punto per giorno di borsa.`;
-  linee($("c-valore"), SV, [{ k: "totale", nome: "Totale", colore: "var(--series)" }], { fmt: v => num(v, 0) + " €", fmtTip: v => euro(v, 0) });
-  tabellaDati($("c-valore"), ["Giorno", "Totale"], SV.slice().reverse().map(r => [data(r.d), euro(r.totale, 0)]));
-  confrontoBanche(D, SV);
-  composizione(D);
-  durata(D);
-
-  // conti
-  const box = $("conti");
-  D.conti.forEach(c => {
-    const sez = document.createElement("section");
-    sez.innerHTML = `<h2>${esc(c.nome)}<small>${esc(c.dettaglio || "")}</small></h2>`;
-    box.appendChild(sez);
-    if (!c.posizioni.length) { sez.insertAdjacentHTML("beforeend", `<div class="card"><p class="vuoto">Ancora niente: i titoli compariranno qui appena caricati.</p></div>`); return; }
-    sez.insertAdjacentHTML("beforeend", `<div class="card">${tabella(
-      [["Titolo"], ["Quantità", 1], ["Prezzo", 1], ["Valore", 1], ["Cedole", 1], ["Risultato", 1]],
-      c.posizioni.map(p => [`${esc(p.nome)}<span class="det">${esc(p.isin)} · prezzo del ${data(p.data_prezzo, false)}</span>`,
-        p.tipo === "btp" ? num(p.nominale) + " nom." : p.tipo === "fondo" || p.tipo === "pip" ? num(p.quantita, 2) + " quote" : num(p.quantita), num(p.prezzo, p.tipo === "fondo" || p.tipo === "pip" ? 3 : 2), euro(p.valore), p.cedole == null ? '<span class="muted">?</span>' : euro(p.cedole), segno(p.gp_totale)])
-      .concat([["<b>Totale</b>", "", "", `<b>${euro(c.valore)}</b>`, "", segno(c.posizioni.reduce((s, p) => s + (p.gp_totale || 0), 0))]]))}
-      <div class="sub" style="margin:8px 0 0">Risultato = valore + cedole incassate (lorde) − investito${c.posizioni.some(p => p.tipo === "pip") ? " (per la pensione integrativa: versato)" : ""}.${c.posizioni.some(p => p.acquisto_ipotesi) ? " Dove la data d'acquisto non è certa, le cedole contate sono il massimo possibile." : ""}</div></div>`);
-    const g = document.createElement("div"); g.className = "grid2"; sez.appendChild(g);
-    c.posizioni.forEach(p => p.tipo === "btp" ? schedaBtp(p, g) : p.tipo === "fondo" ? schedaFondo(p, g) : p.tipo === "pip" ? schedaPip(p, g) : schedaCertificato(p, g));
-  });
-
-  // prossime date
+// ---- prossime date ----
+function prossimeDate(D) {
   const ev = [];
   D.conti.forEach(c => c.posizioni.forEach(p => {
-    const a = p.analisi;
+    const a = p.analisi || {};
     if (p.tipo === "btp") { if (a.prossima_cedola) ev.push([a.prossima_cedola, `Cedola ${p.nome}`, `${euro(a.cedola_netta)} netti`]); ev.push([p.scadenza, `Scadenza ${p.nome}`, `rimborso ${euro(p.nominale, 0)}`]); }
     else if (p.tipo === "certificato") {
-      a.osservazioni.filter(o => o.stato === "futura").slice(0, 2).forEach(o => ev.push([o.osservazione, `Osservazione cedola ${p.nome}`, `${euro(a.cedola_unitaria * p.quantita)} lordi il ${data(o.pagamento, false)} se il peggiore è ≥ 70%`]));
-      ev.push([p.scadenza, `Scadenza ${p.nome}`, `rimborso ${euro(p.quantita * p.nominale_unitario, 0)} se il peggiore è ≥ 40%`]);
+      a.osservazioni.filter(o => o.stato === "futura").slice(0, 2).forEach(o => ev.push([o.osservazione, `Osservazione cedola ${p.nome}`, `${euro(a.cedola_unitaria * p.quantita)} lordi il ${data(o.pagamento, false)} se il peggiore è almeno al 70%`]));
+      ev.push([p.scadenza, `Scadenza ${p.nome}`, `rimborso ${euro(p.quantita * p.nominale_unitario, 0)} se il peggiore è almeno al 40%`]);
     }
     else if (p.tipo === "pip") {
-      if (a.prossimo_versamento) ev.push([a.prossimo_versamento, `Versamento ${p.nome}`, `${euro(p.versamento.importo, 0)} (addebito mensile)`]);
-      ev.push([p.scadenza, `Fine dei versamenti ${p.nome}`, p.bonus_scadenza ? `più il bonus a scadenza, circa ${euro(p.bonus_scadenza.importo, 0)}` : ""]);
+      if (a.prossimo_versamento) ev.push([a.prossimo_versamento, "Versamento pensione integrativa", `${euro(p.versamento.importo, 0)}, addebito mensile`]);
+      ev.push([p.scadenza, "Fine dei versamenti alla pensione integrativa", p.bonus_scadenza ? `più il bonus a scadenza, circa ${euro(p.bonus_scadenza.importo, 0)}` : ""]);
     }
     else if (p.tipo === "fondo" && p.pac) {
       const r = prossimaRata(p.pac);
@@ -661,10 +588,36 @@ function avvia(D) {
     }
   }));
   ev.sort((a, b) => a[0] < b[0] ? -1 : 1);
-  $("l-date").innerHTML = ev.map(([d, t, n]) => `<li><span class="k">${data(d)} · ${esc(t)}<span class="det muted" style="display:block;font-size:12px">${n}</span></span><span class="v muted">${giorniDa(d) <= 60 ? "fra " + giorniDa(d) + " giorni" : ""}</span></li>`).join("");
+  const li = ([d, t, n]) => `<li><span class="k">${data(d)} · ${esc(t)}${n ? `<span class="det muted" style="display:block;font-size:12px">${n}</span>` : ""}</span><span class="v muted">${giorniDa(d) <= 60 ? "fra " + giorniDa(d) + " giorni" : ""}</span></li>`;
+  const N = 4;
+  $("l-date").innerHTML = ev.slice(0, N).map(li).join("");
+  $("altre-date").innerHTML = ev.length > N ? `<details class="dati"><summary>Altre ${ev.length - N} date</summary><ul class="lista">${ev.slice(N).map(li).join("")}</ul></details>` : "";
+}
 
-  $("fonti").innerHTML = "Prezzi: Borsa Italiana (MOT ed EuroTLX). Indici: chiusure ufficiali STOXX. Il valore non comprende ratei, liquidità sul conto e tasse. " +
-    "Fondi: valore della quota da OnlineSIM. Pensione integrativa: valore della quota del fondo da Quantalys, quote calcolate (vedi la sua scheda). Le cedole di marzo e giugno 2026 del certificato risultano dal prezzo medio di carico della banca, perché lo storico di Euro Stoxx Banks disponibile parte da agosto.";
+function avvia(D) {
+  const T = D.totali || D.totale;
+  $("aggiornato").textContent = `Prezzi aggiornati il ${data(D.aggiornato)} alle ${D.aggiornato.slice(11)}`;
+  const gp = T.valore + T.cedole - T.investito;
+  $("sintesi").innerHTML =
+    `<div><div class="label">Valore oggi</div><div class="value">${euro(T.valore, 0)}</div><div class="note">ai prezzi di mercato</div></div>` +
+    `<div><div class="label">Investito</div><div class="value">${euro(T.investito, 0)}</div><div class="note">comprati e versati</div></div>` +
+    `<div><div class="label">Risultato</div><div class="value">${segno(gp, 0)}</div><div class="note">${percRis(gp, T.investito)}, con ${euro(T.cedole, 0)} di cedole</div></div>`;
+  const errori = [...(D.errori || []), ...D.conti.flatMap(c => c.posizioni.filter(p => p.errore).map(p => `${p.nome}: ${p.errore}`))];
+  if (errori.length) $("errori").innerHTML = `<p class="errore">Dati non aggiornati: ${errori.map(esc).join(" · ")}</p>`;
+
+  prossimeDate(D);
+  const box = $("conti");
+  D.conti.forEach((c, i) => conto(c, i, box));
+
+  const SV = D.serie_valore;
+  $("sub-valore").textContent = SV.length < 10 ? `Lo storico parte dal ${data(SV[0].d)} e cresce di un punto per ogni giorno di borsa.` : `Dal ${data(SV[0].d)}.`;
+  linee($("c-valore"), SV, [{ k: "totale", nome: "Totale", colore: "var(--series)" }], { fmt: v => num(v, 0) + " €", fmtTip: v => euro(v, 0) });
+  tabellaDati($("c-valore"), ["Giorno", "Totale"], SV.slice().reverse().map(r => [data(r.d), euro(r.totale, 0)]));
+  composizione(D);
+  durata(D);
+
+  $("fonti").innerHTML = "Prezzi: Borsa Italiana (titoli), OnlineSIM (fondi), Quantalys (pensione integrativa); indici: chiusure ufficiali STOXX. " +
+    "Il valore non comprende ratei, liquidità e tasse. Le cedole di marzo e giugno 2026 del certificato risultano dal prezzo medio di carico della banca.";
 }
 </script>
 </body>
