@@ -19,7 +19,7 @@
   color-scheme: light;
   --page: #faf8f3; --surface: #fffefa; --ink: #1b1a17; --ink-2: #4f4b42; --muted: #706b5e;
   --grid: #ebe6da; --axis: #d9d4c7; --border: rgba(27,26,23,0.12);
-  --series: #1f5d63; --s1: #008f87; --s2: #b0661f; --track: #ebe6da;
+  --series: #1f5d63; --s1: #008f87; --s2: #b0661f; --s3: #6b5a9e; --track: #ebe6da;
   --good: #2e7d4f; --warn: #9a5b00; --bad: #9a4b3f;
   --m-obb: #3d6e9e; --m-az: #b4513a; --m-cert: #7d7a2e;
 }
@@ -28,7 +28,7 @@
     color-scheme: dark;
     --page: #0e1615; --surface: #152120; --ink: #f3f1ea; --ink-2: #c9d6d3; --muted: #8f9a97;
     --grid: #22302e; --axis: #2f3f3d; --border: rgba(255,255,255,0.10);
-    --series: #8fd4c8; --s1: #2aa79a; --s2: #c0823a; --track: #22302e;
+    --series: #8fd4c8; --s1: #2aa79a; --s2: #c0823a; --s3: #a898dc; --track: #22302e;
     --good: #6cc28a; --warn: #e0b04a; --bad: #e08b7d;
     --m-obb: #7fb0e0; --m-az: #e8876a; --m-cert: #c9c46e;
   }
@@ -37,7 +37,7 @@
   color-scheme: dark;
   --page: #0e1615; --surface: #152120; --ink: #f3f1ea; --ink-2: #c9d6d3; --muted: #8f9a97;
   --grid: #22302e; --axis: #2f3f3d; --border: rgba(255,255,255,0.10);
-  --series: #8fd4c8; --s1: #2aa79a; --s2: #c0823a; --track: #22302e;
+  --series: #8fd4c8; --s1: #2aa79a; --s2: #c0823a; --s3: #a898dc; --track: #22302e;
   --good: #6cc28a; --warn: #e0b04a; --bad: #e08b7d;
   --m-obb: #7fb0e0; --m-az: #e8876a; --m-cert: #c9c46e;
 }
@@ -170,13 +170,13 @@ footer a { color: var(--muted); }
 
   <div class="grid2">
     <div class="card">
-      <h3>Mediolanum e Banco BPM</h3>
-      <div class="sub">Quanto è stato investito in ciascuna banca e quanto vale oggi, cedole incassate comprese.</div>
+      <h3>Per conto</h3>
+      <div class="sub">Quanto è stato investito (o versato) in ciascun conto e quanto vale oggi, cedole incassate comprese.</div>
       <div id="c-banche"></div>
       <div class="legenda"><span><i style="background:transparent;border:1.5px solid var(--muted);height:10px"></i>Investito</span><span><i style="background:var(--muted);height:10px"></i>Oggi: valore + cedole</span></div>
     </div>
     <div class="card">
-      <h3>Valore di mercato per banca</h3>
+      <h3>Valore di mercato per conto</h3>
       <div class="sub" id="sub-banche"></div>
       <div class="chart" id="c-banche-linee"></div>
     </div>
@@ -193,7 +193,7 @@ footer a { color: var(--muted); }
       <h3>Quando finiscono</h3>
       <div class="sub">Da oggi alla scadenza dei titoli. I fondi non scadono: per loro c'è la durata consigliata dal documento ufficiale (KID), contata dall'acquisto.</div>
       <div id="c-durata"></div>
-      <div class="legenda"><span><i style="background:var(--muted);height:10px"></i>Scadenza</span><span><i style="background:transparent;border:1.5px solid var(--muted);height:10px"></i>Durata consigliata (fondi)</span><span><i style="background:var(--s1);height:10px"></i>Mediolanum</span><span><i style="background:var(--s2);height:10px"></i>Banco BPM</span></div>
+      <div class="legenda"><span><i style="background:var(--muted);height:10px"></i>Scadenza</span><span><i style="background:transparent;border:1.5px solid var(--muted);height:10px"></i>Durata consigliata (fondi)</span><span><i style="background:var(--s1);height:10px"></i>Mediolanum</span><span><i style="background:var(--s2);height:10px"></i>Banco BPM</span><span><i style="background:var(--s3);height:10px"></i>Mediolanum Vita</span></div>
     </div>
   </div>
 
@@ -421,6 +421,37 @@ function schedaFondo(p, el) {
   </div>`);
 }
 
+// pensione integrativa (PIP): quote calcolate dallo script, a partire da una schermata di Mediolanum
+function schedaPip(p, el) {
+  const a = p.analisi || {}, r = p.riferimento, v = p.versamento, b = p.bonus_scadenza;
+  const attesa = (a.in_attesa || []);
+  const mov = a.movimenti || [];
+  el.insertAdjacentHTML("beforeend", `<div class="card" style="grid-column: 1 / -1">
+    <h3>${esc(p.nome)}</h3><div class="sub">Piano individuale pensionistico di Mediolanum Vita · polizza ${esc(p.polizza)} · profilo ${esc(p.profilo)}</div>
+    <div class="grid2" style="margin-top:0">
+      <div>
+        <ul class="lista">
+          <li><span class="k">Fondo</span><span class="v">${esc(p.fondo)} <span class="muted">(azionario · ${esc(p.isin)})</span></span></li>
+          <li><span class="k">Quote</span><span class="v">${num(p.quantita, 3)} <span class="muted">(calcolate)</span></span></li>
+          <li><span class="k">Valore della quota</span><span class="v">${num(p.prezzo, 3)} € <span class="muted">(del ${data(p.data_prezzo, false)})</span></span></li>
+          <li><span class="k">Valore</span><span class="v">${euro(p.valore)}</span></li>
+          <li><span class="k">Versato</span><span class="v">${euro(p.investito, 0)} <span class="muted">(${euro(v.importo, 0)} al mese, il ${v.giorno})</span></span></li>
+          <li><span class="k">Risultato</span><span class="v">${segno(p.gp_totale, 0)} <span class="muted">${p.investito ? (p.gp_totale >= 0 ? "+" : "−") + num(Math.abs(p.gp_totale / p.investito * 100), 1) + "%" : ""}</span></span></li>
+          ${attesa.length ? `<li><span class="k">In arrivo</span><span class="v">${attesa.map(x => `${euro(x.importo, 0)} del ${data(x.data, false)}`).join(", ")} <span class="muted">(non ancora contati)</span></span></li>` : ""}
+          ${b ? `<li><span class="k">Bonus a scadenza</span><span class="v">circa ${euro(b.importo, 0)} <span class="muted">nel ${p.scadenza.slice(0, 4)}, escluso dal valore</span></span></li>` : ""}
+          <li><span class="k">Fine dei versamenti</span><span class="v">${data(p.scadenza)}</span></li>
+        </ul>
+      </div>
+      <div class="spiega">
+        <p><b>Come si calcola.</b> Ogni versamento, tolto il caricamento del ${num(v.caricamento * 100)}%, compra quote del fondo al valore del primo giorno lavorativo dopo l'addebito. Si parte dal valore indicato da Mediolanum per il ${data(r.data)} (${euro(r.valore)})${a.riferimento_stimato ? ", per ora con il valore della quota più vicino" : ""}, poi lo script aggiunge da solo le rate mensili e i versamenti extra. Il valore della quota arriva da Quantalys con qualche giorno di ritardo; le spese di gestione del fondo (2,95% l'anno) sono già dentro.</p>
+        <p>A fine anno Mediolanum toglie l'imposta del 20% sui rendimenti dell'anno, quindi a gennaio le quote vanno riallineate con una schermata nuova. Il bonus a scadenza restituisce i caricamenti con gli interessi, ma solo nel ${p.scadenza.slice(0, 4)} e come se si versasse fino ad allora. I soldi non si possono ritirare come un fondo: si riscuotono alla pensione, salvo gli anticipi previsti dal contratto.</p>
+      </div>
+    </div>
+    ${mov.length ? `<details class="dati"><summary>Versamenti contati dopo il ${data(r.data, false)}</summary>${tabella([["Versamento"], ["Importo", 1], ["Valore quota", 1], ["Quote", 1]],
+      mov.slice().reverse().map(m => [`${data(m.addebito)}${m.tipo === "extra" ? ' <span class="muted">(extra)</span>' : ""}`, euro(m.importo, 0), `${num(m.prezzo, 3)} € <span class="muted">del ${data(m.valorizzazione, false)}</span>`, num(m.quote, 3)]))}</details>` : ""}
+  </div>`);
+}
+
 function schedaCertificato(p, el) {
   const a = p.analisi, w = a.peggiore;
   const sc = x => Math.min(100, Math.max(0, x / 1.4 * 100));   // metro da 0% a 140% dello strike
@@ -480,8 +511,8 @@ function schedaCertificato(p, el) {
 }
 
 // ---- confronto fra le banche ----
-// Il colore segue la banca (non l'ordine): Mediolanum s1, Banco BPM s2.
-const COLORE_CONTO = { mediolanum: "var(--s1)", bpm: "var(--s2)" };
+// Il colore segue il conto (non l'ordine): Mediolanum s1, Banco BPM s2, Mediolanum Vita (pensione integrativa) s3.
+const COLORE_CONTO = { mediolanum: "var(--s1)", bpm: "var(--s2)", "mediolanum-vita": "var(--s3)" };
 const nomeBreve = c => c.nome.replace(/^Banc[ao] /, "");
 function confrontoBanche(D, SV) {
   const conti = D.conti.filter(c => c.posizioni.length).map((c, i) => {
@@ -550,6 +581,7 @@ function durata(D) {
   const oggi = oggiIso();
   const righe = D.conti.flatMap((c, i) => c.posizioni.map(p => {
     const colore = COLORE_CONTO[c.id] || (i ? "var(--s2)" : "var(--s1)");
+    if (p.tipo === "pip") return { p, c, colore, fine: p.scadenza, tipo: "scadenza", testo: `pensione: fine dei versamenti il ${data(p.scadenza)}` };
     if (p.tipo !== "fondo") return { p, c, colore, fine: p.scadenza, tipo: "scadenza", testo: `scade il ${data(p.scadenza)}` };
     const f = fineFondo(p), pac = p.pac && finePac(p.pac);
     const extra = pac ? ` · PAC fino a ${meseAnno(pac)}` : p.pac ? " · PAC" : "";
@@ -603,11 +635,11 @@ function avvia(D) {
     sez.insertAdjacentHTML("beforeend", `<div class="card">${tabella(
       [["Titolo"], ["Quantità", 1], ["Prezzo", 1], ["Valore", 1], ["Cedole", 1], ["Risultato", 1]],
       c.posizioni.map(p => [`${esc(p.nome)}<span class="det">${esc(p.isin)} · prezzo del ${data(p.data_prezzo, false)}</span>`,
-        p.tipo === "btp" ? num(p.nominale) + " nom." : p.tipo === "fondo" ? num(p.quantita, 2) + " quote" : num(p.quantita), num(p.prezzo, p.tipo === "fondo" ? 3 : 2), euro(p.valore), p.cedole == null ? '<span class="muted">?</span>' : euro(p.cedole), segno(p.gp_totale)])
+        p.tipo === "btp" ? num(p.nominale) + " nom." : p.tipo === "fondo" || p.tipo === "pip" ? num(p.quantita, 2) + " quote" : num(p.quantita), num(p.prezzo, p.tipo === "fondo" || p.tipo === "pip" ? 3 : 2), euro(p.valore), p.cedole == null ? '<span class="muted">?</span>' : euro(p.cedole), segno(p.gp_totale)])
       .concat([["<b>Totale</b>", "", "", `<b>${euro(c.valore)}</b>`, "", segno(c.posizioni.reduce((s, p) => s + (p.gp_totale || 0), 0))]]))}
-      <div class="sub" style="margin:8px 0 0">Risultato = valore + cedole incassate (lorde) − investito.${c.posizioni.some(p => p.acquisto_ipotesi) ? " Dove la data d'acquisto non è certa, le cedole contate sono il massimo possibile." : ""}</div></div>`);
+      <div class="sub" style="margin:8px 0 0">Risultato = valore + cedole incassate (lorde) − investito${c.posizioni.some(p => p.tipo === "pip") ? " (per la pensione integrativa: versato)" : ""}.${c.posizioni.some(p => p.acquisto_ipotesi) ? " Dove la data d'acquisto non è certa, le cedole contate sono il massimo possibile." : ""}</div></div>`);
     const g = document.createElement("div"); g.className = "grid2"; sez.appendChild(g);
-    c.posizioni.forEach(p => p.tipo === "btp" ? schedaBtp(p, g) : p.tipo === "fondo" ? schedaFondo(p, g) : schedaCertificato(p, g));
+    c.posizioni.forEach(p => p.tipo === "btp" ? schedaBtp(p, g) : p.tipo === "fondo" ? schedaFondo(p, g) : p.tipo === "pip" ? schedaPip(p, g) : schedaCertificato(p, g));
   });
 
   // prossime date
@@ -619,6 +651,10 @@ function avvia(D) {
       a.osservazioni.filter(o => o.stato === "futura").slice(0, 2).forEach(o => ev.push([o.osservazione, `Osservazione cedola ${p.nome}`, `${euro(a.cedola_unitaria * p.quantita)} lordi il ${data(o.pagamento, false)} se il peggiore è ≥ 70%`]));
       ev.push([p.scadenza, `Scadenza ${p.nome}`, `rimborso ${euro(p.quantita * p.nominale_unitario, 0)} se il peggiore è ≥ 40%`]);
     }
+    else if (p.tipo === "pip") {
+      if (a.prossimo_versamento) ev.push([a.prossimo_versamento, `Versamento ${p.nome}`, `${euro(p.versamento.importo, 0)} (addebito mensile)`]);
+      ev.push([p.scadenza, `Fine dei versamenti ${p.nome}`, p.bonus_scadenza ? `più il bonus a scadenza, circa ${euro(p.bonus_scadenza.importo, 0)}` : ""]);
+    }
     else if (p.tipo === "fondo" && p.pac) {
       const r = prossimaRata(p.pac);
       if (r) ev.push([r[0], `Rata PAC ${p.nome}`, `${euro(p.pac.rata, 0)}${p.pac.rate ? `, rata ${r[1]} di ${p.pac.rate}` : ""}`]);
@@ -628,7 +664,7 @@ function avvia(D) {
   $("l-date").innerHTML = ev.map(([d, t, n]) => `<li><span class="k">${data(d)} · ${esc(t)}<span class="det muted" style="display:block;font-size:12px">${n}</span></span><span class="v muted">${giorniDa(d) <= 60 ? "fra " + giorniDa(d) + " giorni" : ""}</span></li>`).join("");
 
   $("fonti").innerHTML = "Prezzi: Borsa Italiana (MOT ed EuroTLX). Indici: chiusure ufficiali STOXX. Il valore non comprende ratei, liquidità sul conto e tasse. " +
-    "Fondi: valore della quota da OnlineSIM. Le cedole di marzo e giugno 2026 del certificato risultano dal prezzo medio di carico della banca, perché lo storico di Euro Stoxx Banks disponibile parte da agosto.";
+    "Fondi: valore della quota da OnlineSIM. Pensione integrativa: valore della quota del fondo da Quantalys, quote calcolate (vedi la sua scheda). Le cedole di marzo e giugno 2026 del certificato risultano dal prezzo medio di carico della banca, perché lo storico di Euro Stoxx Banks disponibile parte da agosto.";
 }
 </script>
 </body>
