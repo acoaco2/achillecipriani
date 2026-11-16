@@ -342,7 +342,7 @@ function avvia(D) {
     else if (ore(B.notte.inizio, ORA) > 30) prob.push(["bad", `Backup notturno fermo dal ${giornoCorto(B.notte.inizio)}`]);
   }
   if (B.immagine && ore(B.immagine.data + " 04:30", ORA) > 17 * 24) prob.push(["warn", `Immagine della microSD vecchia: ${giornoCorto(B.immagine.data)}`]);
-  if (B.pc && B.pc.ultimo_ok && ore(B.pc.ultimo_ok, ORA) > 48) prob.push(["warn", `Backup di Claude del PC fermo dal ${giornoCorto(B.pc.ultimo_ok)}`]);
+  if (B.pc && B.pc.ultimo_ok && ore(B.pc.ultimo_ok, ORA) > 72) prob.push(["warn", `Backup di Claude del PC fermo dal ${giornoCorto(B.pc.ultimo_ok)}`]);
   if (B.immich && (!B.immich.dump || ore(B.immich.dump, ORA) > 10 * 24))
     prob.push(["warn", B.immich.dump ? `Backup di Immich vecchio: l'ultimo dump su OneDrive è del ${giornoCorto(B.immich.dump)}` : "Backup di Immich: nessun dump su OneDrive"]);
   if (S.disco.pct >= 85) prob.push(["bad", `Disco al ${S.disco.pct}%`]);
