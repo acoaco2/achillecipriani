@@ -4,7 +4,60 @@
 // soli, e il giorno dopo la serata sparisce dalla home.
 const GIGS = [
   { date: "2026-10-27", venue: "Serata Privata", city: "Club Salute", note: "Private event" },
+  { date: "2026-12-12", venue: "Dj Set Natalizio", city: "Christmas party", note: "Christmas edition", xmas: true },
 ];
+
+// Neve: dal 15 novembre al 6 gennaio scendono fiocchi nella testata e nel
+// piede della home; il resto dell'anno non compare nulla.
+function snowSeason() {
+  const t = new Date();
+  const m = t.getMonth(), d = t.getDate();
+  return (m === 10 && d >= 15) || m === 11 || (m === 0 && d <= 6);
+}
+
+function Flake({ size = 14, color = "currentColor" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+      {[0, 60, 120].map(a => (
+        <g key={a} transform={`rotate(${a} 12 12)`}>
+          <path d="M12 2v20"/>
+          <path d="M9.5 4.5 12 7l2.5-2.5M9.5 19.5 12 17l2.5 2.5"/>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+function Snow({ count = 16, color = "var(--ink)", opacity = 0.3, seed = 1 }) {
+  const flakes = React.useMemo(() => {
+    let s = seed * 9301;
+    const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    return Array.from({ length: count }, () => ({
+      left: rnd() * 100,
+      size: 8 + rnd() * 10,
+      dur: 9 + rnd() * 9,
+      delay: -rnd() * 18,
+      drift: (rnd() - 0.5) * 40,
+      y: 5 + rnd() * 85,
+    }));
+  }, [count, seed]);
+  return (
+    <div aria-hidden="true" style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
+      {flakes.map((f, i) => (
+        <span key={i} className="snowflake" style={{
+          left: f.left + "%",
+          opacity,
+          animationDuration: f.dur + "s",
+          animationDelay: f.delay + "s",
+          "--drift": f.drift + "px",
+          "--y": f.y + "%",
+        }}>
+          <Flake size={f.size} color={color}/>
+        </span>
+      ))}
+    </div>
+  );
+}
 
 const MONTHS = ["GEN", "FEB", "MAR", "APR", "MAG", "GIU", "LUG", "AGO", "SET", "OTT", "NOV", "DIC"];
 const WEEKDAYS = ["DOM", "LUN", "MAR", "MER", "GIO", "VEN", "SAB"];
@@ -27,6 +80,7 @@ const GENRES = ["House", "Tech House", "Italodisco", "New Wave", "Punk / Rock", 
 function HomePage({ navigate, djName, bio }) {
   const [qrOpen, setQrOpen] = React.useState(false);
   const gigs = upcomingGigs();
+  const snow = snowSeason();
   const [pwOpen, setPwOpen] = React.useState(false);
   const [pw, setPw] = React.useState("");
   const [shake, setShake] = React.useState(false);
@@ -67,6 +121,7 @@ function HomePage({ navigate, djName, bio }) {
         }}>
           <Vinyl size={280} spinning={true} accent="#E8932A"/>
         </div>
+        {snow && <Snow count={18} seed={3}/>}
 
         <div style={{ position: "relative" }}>
           <h1 className="display" style={{
@@ -242,8 +297,9 @@ function HomePage({ navigate, djName, bio }) {
                   </div>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: "var(--font-display)", fontSize: 16, lineHeight: 1.2, marginBottom: 4 }}>
+                  <div style={{ fontFamily: "var(--font-display)", fontSize: 16, lineHeight: 1.2, marginBottom: 4, display: "flex", alignItems: "center", gap: 6, paddingRight: 36 }}>
                     {g.venue}
+                    {g.xmas && <span style={{ color: "var(--orange-deep)", display: "inline-flex" }}><Flake size={16}/></span>}
                   </div>
                   <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 6 }}>
                     {g.city}
@@ -287,8 +343,11 @@ function HomePage({ navigate, djName, bio }) {
         marginTop: 20,
         background: "var(--ink)",
         color: "var(--cream)",
+        position: "relative",
+        overflow: "hidden",
       }}>
-        <div className="display" style={{ fontSize: 32, lineHeight: 0.95, marginBottom: 16, textTransform: "none" }}>
+        {snow && <Snow count={14} color="var(--cream)" opacity={0.35} seed={7}/>}
+        <div className="display" style={{ fontSize: 32, lineHeight: 0.95, marginBottom: 16, textTransform: "none", position: "relative" }}>
           Keep the<br/>floor moving<span style={{ color: "var(--orange)" }}>.</span>
         </div>
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.15em", color: "var(--cream-2)", marginBottom: 4 }}>
