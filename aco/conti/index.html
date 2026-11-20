@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Conti Aco</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+  body { margin: 0; background: #faf8f3; }
+  @media (prefers-color-scheme: dark) { body { background: #0e1615; } }
+  [hidden] { display: none !important; }
+  .blocco { font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #1b1a17;
+            min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; box-sizing: border-box; text-align: center; }
+  @media (prefers-color-scheme: dark) { .blocco { color: #f3f1ea; } }
+  .blocco a { color: #1f5d63; }
+  @media (prefers-color-scheme: dark) { .blocco a { color: #8fd4c8; } }
+</style>
+</head>
+<body>
+<div class="blocco" id="blocco" hidden><p>Area riservata. <a href="/">Accedi dalla pagina iniziale</a>.</p></div>
+
+<script>
+  /*
+    Guscio della pagina «Conti Aco» nell'area personale: usa il token di /aco
+    (sessionStorage "aco-k", messo dal login aco della home). Il contenuto
+    (dati.json: titolo, stile e corpo) è cifrato con quel token (PBKDF2 250.000 + AES-GCM)
+    ed è generato dal PC con OneDrive/acoprogetti/conti_Aco/pubblica_sito.py.
+    Non modificare dati.json a mano.
+  */
+  (async function () {
+    function bloccato() { document.getElementById("blocco").hidden = false; }
+
+    var k = null;
+    try { k = sessionStorage.getItem("aco-k"); } catch (e) {}
+    if (!k || !window.crypto || !crypto.subtle) return bloccato();
+    try {
+      var c = await fetch("dati.json", { cache: "no-store" }).then(function (r) { return r.json(); });
+      var b = function (s) { return Uint8Array.from(atob(s), function (x) { return x.charCodeAt(0); }); };
+      var km = await crypto.subtle.importKey("raw", new TextEncoder().encode(k), "PBKDF2", false, ["deriveKey"]);
+      var key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b(c.salt), iterations: c.iterations, hash: "SHA-256" },
+        km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+      var pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b(c.iv) }, key, b(c.ct));
+      var d = JSON.parse(new TextDecoder().decode(pt));
+    } catch (e) { return bloccato(); }
+
+    document.title = d.titolo;
+    var st = document.createElement("style");
+    st.textContent = d.stile;
+    document.head.appendChild(st);
+    document.getElementById("blocco").remove();
+    document.body.insertAdjacentHTML("afterbegin", d.corpo);
+  })();
+</script>
+</body>
+</html>
