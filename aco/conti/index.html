@@ -8,7 +8,8 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>
   body { margin: 0; background: #faf8f3; }
-  @media (prefers-color-scheme: dark) { body { background: #0e1615; } }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) body { background: #0e1615; } }
+  :root[data-theme="dark"] body { background: #0e1615; }
   [hidden] { display: none !important; }
   .blocco { font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #1b1a17;
             min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; box-sizing: border-box; text-align: center; }
@@ -28,6 +29,10 @@
     ed è generato dal PC con OneDrive/acoprogetti/conti_Aco/pubblica_sito.py.
     Non modificare dati.json a mano.
   */
+  // tema scelto col pulsante «Tema» delle pagine di /aco (localStorage "tema", condiviso dal sito)
+  var root = document.documentElement;
+  try { var t = localStorage.getItem("tema"); if (t) root.dataset.theme = t; } catch (e) {}
+
   (async function () {
     function bloccato() { document.getElementById("blocco").hidden = false; }
 
@@ -50,6 +55,13 @@
     document.head.appendChild(st);
     document.getElementById("blocco").remove();
     document.body.insertAdjacentHTML("afterbegin", d.corpo);
+
+    var tema = document.getElementById("tema");
+    if (tema) tema.onclick = function () {
+      var scuro = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+      root.dataset.theme = scuro ? "light" : "dark";
+      try { localStorage.setItem("tema", root.dataset.theme); } catch (e) {}
+    };
   })();
 </script>
 </body>
