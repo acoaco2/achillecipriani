@@ -121,6 +121,14 @@ input[type=range]{accent-color:var(--accent);width:110px}
 .switch{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;color:var(--ink);font-size:13px}
 .switch input{accent-color:var(--accent);width:15px;height:15px}
 .tempo-val{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:700;min-width:52px}
+button.azione[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.battiti{display:flex;align-items:center;gap:5px}
+.battiti i{
+  width:9px;height:9px;border-radius:50%;
+  border:1px solid var(--line-strong);background:transparent;
+}
+.battiti i.primo{width:11px;height:11px}
+.battiti i.on{background:var(--accent);border-color:var(--accent)}
 
 /* ---------- aiuto stampa ---------- */
 .aiuto{
@@ -217,6 +225,10 @@ footer a:hover{color:var(--accent)}
       <input type="range" id="tempo" min="40" max="140" step="2">
       <span class="tempo-val" id="tempo-val"></span>
     </div>
+    <div class="tool">
+      <button class="azione" id="metronomo" type="button" aria-pressed="false">Metronomo</button>
+      <span class="battiti" id="battiti" aria-hidden="true"></span>
+    </div>
     <label class="switch" for="dita">
       <input type="checkbox" id="dita" checked>
       Diteggiatura
@@ -279,7 +291,9 @@ footer a:hover{color:var(--accent)}
       elTempo = document.getElementById("tempo"),
       elTempoVal = document.getElementById("tempo-val"),
       elDita = document.getElementById("dita"),
-      elPlay = document.getElementById("play");
+      elPlay = document.getElementById("play"),
+      elMetro = document.getElementById("metronomo"),
+      elBattiti = document.getElementById("battiti");
 
   var attuale = BRANI[0];
 
@@ -349,6 +363,7 @@ footer a:hover{color:var(--accent)}
 
   function selezionaBrano(id){
     fermaAudio();
+    fermaMetronomo();
     attuale = BRANI.filter(function(b){return b.id===id;})[0] || BRANI[0];
     Array.prototype.forEach.call(elBrani.children, function(b){
       b.setAttribute("aria-pressed", b.dataset.id===attuale.id ? "true" : "false");
@@ -372,6 +387,7 @@ footer a:hover{color:var(--accent)}
     }
     mostraStudio();
     disegna();
+    preparaBattiti();
   }
 
   BRANI.forEach(function(b){
@@ -432,6 +448,77 @@ footer a:hover{color:var(--accent)}
     timer = setTimeout(fermaAudio, (totale + 0.7)*1000);
   }
 
+  /* ---------- metronomo ---------- */
+  // Il tempo dello slider è in semiminime al minuto (come Q:1/4=… nei brani).
+  // Il metronomo batte l'unità della misura (M:3/8 batte gli ottavi) e
+  // accentua il primo battito di ogni battuta.
+  var mCtx = null, mTimer = null, mProssimo = 0, mBattito = 0, mVisivi = [];
+
+  function misura(){
+    var m = /^M:\s*(\d+)\/(\d+)/m.exec(attuale.abc || "");
+    return m ? {num:parseInt(m[1],10), den:parseInt(m[2],10)} : {num:4, den:4};
+  }
+
+  function preparaBattiti(){
+    var n = misura().num, s = "";
+    for(var i=0;i<n;i++) s += '<i'+(i===0?' class="primo"':'')+'></i>';
+    elBattiti.innerHTML = s;
+  }
+
+  function illumina(i){
+    Array.prototype.forEach.call(elBattiti.children, function(d, k){
+      d.classList.toggle("on", k===i);
+    });
+  }
+
+  function clic(t, forte){
+    var o = mCtx.createOscillator(), g = mCtx.createGain();
+    o.type = "square";
+    o.frequency.value = forte ? 1760 : 1175;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(forte ? 0.22 : 0.13, t + 0.002);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    o.connect(g); g.connect(mCtx.destination);
+    o.start(t); o.stop(t + 0.06);
+  }
+
+  function pianifica(){
+    var mis = misura(),
+        bpm = parseInt(elTempo.value,10) || attuale.tempo,
+        passo = (60/bpm) * (4/mis.den);
+    while(mProssimo < mCtx.currentTime + 0.12){
+      var b = mBattito % mis.num;
+      clic(mProssimo, b===0);
+      mVisivi.push([mProssimo, b]);
+      mProssimo += passo;
+      mBattito++;
+    }
+    while(mVisivi.length && mVisivi[0][0] <= mCtx.currentTime){
+      illumina(mVisivi.shift()[1]);
+    }
+  }
+
+  function fermaMetronomo(){
+    if(mTimer){ clearInterval(mTimer); mTimer = null; }
+    if(mCtx){ try{ mCtx.close(); }catch(e){} mCtx = null; }
+    mVisivi = [];
+    illumina(-1);
+    elMetro.setAttribute("aria-pressed","false");
+  }
+
+  function avviaMetronomo(){
+    if(mCtx){ fermaMetronomo(); return; }
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    mCtx = new AC();
+    mProssimo = mCtx.currentTime + 0.08;
+    mBattito = 0;
+    mTimer = setInterval(pianifica, 25);
+    pianifica();
+    elMetro.setAttribute("aria-pressed","true");
+  }
+
+  elMetro.addEventListener("click", avviaMetronomo);
   elPlay.addEventListener("click", riproduci);
   elDita.addEventListener("change", disegna);
   elTempo.addEventListener("input", function(){
@@ -439,6 +526,7 @@ footer a:hover{color:var(--accent)}
   });
   document.getElementById("stampa").addEventListener("click", function(){
     fermaAudio();
+    fermaMetronomo();
     var aiuto = document.getElementById("aiuto-stampa"),
         link = document.getElementById("link-scheda"),
         stampato = false;
