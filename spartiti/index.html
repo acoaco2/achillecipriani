@@ -118,6 +118,9 @@ button.azione:hover{background:var(--ink);color:var(--paper)}
 button.azione.primaria{background:var(--accent);border-color:var(--accent);color:#fff}
 button.azione.primaria:hover{filter:brightness(1.08);background:var(--accent);color:#fff}
 input[type=range]{accent-color:var(--accent);width:110px}
+input#metro-vol{width:76px}
+.gruppo-metro{flex-wrap:wrap;gap:8px 10px}
+.gruppo-metro #midi-apri{margin-left:4px}
 .switch{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;color:var(--ink);font-size:13px}
 .switch input{accent-color:var(--accent);width:15px;height:15px}
 .tempo-val{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:700;min-width:52px}
@@ -252,16 +255,18 @@ footer a:hover{color:var(--accent)}
       <input type="range" id="tempo" min="40" max="140" step="2">
       <span class="tempo-val" id="tempo-val"></span>
     </div>
-    <div class="tool">
-      <button class="azione" id="metronomo" type="button" aria-pressed="false">Metronomo</button>
-      <span class="battiti" id="battiti" aria-hidden="true"></span>
-    </div>
     <label class="switch" for="dita">
       <input type="checkbox" id="dita" checked>
       Diteggiatura
     </label>
     <button class="azione" id="stampa" type="button">Stampa / PDF</button>
-    <button class="azione" id="midi-apri" type="button" aria-expanded="false" aria-controls="midi" title="Collega un controller MIDI (tastiera, pad)">MIDI</button>
+    <div class="tool gruppo-metro">
+      <button class="azione" id="metronomo" type="button" aria-pressed="false">Metronomo</button>
+      <span class="battiti" id="battiti" aria-hidden="true"></span>
+      <label for="metro-vol">Volume</label>
+      <input type="range" id="metro-vol" min="0" max="100" step="5" value="70">
+      <button class="azione" id="midi-apri" type="button" aria-expanded="false" aria-controls="midi" title="Collega un controller MIDI (tastiera, pad)">MIDI</button>
+    </div>
   </div>
 
   <div class="midi no-print" id="midi" hidden>
@@ -279,6 +284,12 @@ footer a:hover{color:var(--accent)}
         <button class="azione piccola" type="button" aria-pressed="false">Impara</button>
         <button class="togli" type="button">Togli</button>
       </div>
+      <div class="midi-riga" data-azione="volume">
+        <span class="cosa">Volume metronomo</span>
+        <span class="assegnato">non assegnato</span>
+        <button class="azione piccola" type="button" aria-pressed="false">Impara</button>
+        <button class="togli" type="button">Togli</button>
+      </div>
       <div class="midi-riga" data-azione="tap">
         <span class="cosa">Tap tempo</span>
         <span class="assegnato">non assegnato</span>
@@ -286,7 +297,7 @@ footer a:hover{color:var(--accent)}
         <button class="togli" type="button">Togli</button>
       </div>
     </div>
-    <p class="midi-nota">Premi «Impara», poi tocca sul controller il pad, il tasto o la manopola da usare. Per il tempo serve una manopola o un fader; per il tap tempo batti il pad a ritmo, sui battiti del metronomo. Le scelte restano salvate su questo browser.</p>
+    <p class="midi-nota">Premi «Impara», poi tocca sul controller il pad, il tasto o la manopola da usare. Per il tempo e il volume serve una manopola o un fader; per il tap tempo batti il pad a ritmo, sui battiti del metronomo. Le scelte restano salvate su questo browser.</p>
     <p class="midi-ultimo" id="midi-ultimo"></p>
   </div>
 
@@ -525,13 +536,29 @@ footer a:hover{color:var(--accent)}
     });
   }
 
+  // Volume 0–100 dal cursore, salvato nel browser. La curva è quadratica,
+  // così la parte bassa del cursore resta fine; 70 (predefinito) ≈ 0,07 / 0,045.
+  var elVol = document.getElementById("metro-vol"), CHIAVE_VOL = "spartiti-metro-vol";
+  try{
+    var vSalvato = localStorage.getItem(CHIAVE_VOL);
+    if(vSalvato !== null && !isNaN(parseInt(vSalvato,10))) elVol.value = vSalvato;
+  }catch(e){}
+  function impostaVolume(v){
+    elVol.value = Math.max(0, Math.min(100, Math.round(v/5)*5));
+    try{ localStorage.setItem(CHIAVE_VOL, elVol.value); }catch(e){}
+  }
+  elVol.addEventListener("input", function(){ impostaVolume(parseInt(elVol.value,10)); });
+
   function clic(t, forte){
+    var k = Math.pow((parseInt(elVol.value,10) || 0) / 100, 2);
+    if(k <= 0) return;                    // volume a zero: restano solo i pallini
     var o = mCtx.createOscillator(), g = mCtx.createGain();
-    o.type = "square";
-    o.frequency.value = forte ? 1760 : 1175;
+    // clic morbido (triangolare, tono medio), più basso della musica di «Ascolta»
+    o.type = "triangle";
+    o.frequency.value = forte ? 1320 : 880;
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(forte ? 0.11 : 0.065, t + 0.002);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, (forte ? 0.143 : 0.092) * k), t + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
     o.connect(g); g.connect(mCtx.destination);
     o.start(t); o.stop(t + 0.06);
   }
@@ -656,8 +683,9 @@ footer a:hover{color:var(--accent)}
     elMidiUltimo.textContent = "Ultimo segnale ricevuto: " + descrivi(c) + (c.tipo === "cc" ? " — valore " + valore : "") + ".";
 
     if(impara){
-      if(impara === "tempo" && c.tipo !== "cc") return;  // il tempo vuole una manopola o un fader
-      if(impara !== "tempo" && c.tipo === "cc" && valore === 0) return;
+      var continuo = impara === "tempo" || impara === "volume";
+      if(continuo && c.tipo !== "cc") return;  // tempo e volume vogliono una manopola o un fader
+      if(!continuo && c.tipo === "cc" && valore === 0) return;
       Object.keys(assegnati).forEach(function(k){ if(uguali(assegnati[k], c)) delete assegnati[k]; });
       assegnati[impara] = c;
       impara = null;
@@ -668,6 +696,8 @@ footer a:hover{color:var(--accent)}
 
     if(uguali(assegnati.tempo, c)){
       impostaTempo(40 + valore/127 * 100);
+    } else if(uguali(assegnati.volume, c)){
+      impostaVolume(valore/127 * 100);
     } else if(uguali(assegnati.avvio, c)){
       if(c.tipo === "cc" && valore === 0) return;      // rilascio del tasto
       avviaMetronomo();
