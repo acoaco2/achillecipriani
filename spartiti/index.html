@@ -129,6 +129,33 @@ button.azione[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 }
 .battiti i.primo{width:11px;height:11px}
 .battiti i.on{background:var(--accent);border-color:var(--accent)}
+#midi-apri.collegato::after{
+  content:"";display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:#3f8f5a;margin-left:7px;vertical-align:1px;
+}
+
+/* ---------- controller MIDI ---------- */
+.midi{
+  border:1px solid var(--line-strong);background:var(--surface);
+  padding:14px 16px;display:flex;flex-direction:column;gap:10px;font-size:13.5px;
+}
+.midi p{margin:0;max-width:66ch}
+.midi-stato{font-weight:700}
+.midi-nota,.midi-ultimo{color:var(--muted);font-size:12.5px}
+.midi-righe{display:flex;flex-direction:column}
+.midi-riga{
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;
+  padding-block:8px;border-top:1px solid var(--line);
+}
+.midi-riga .cosa{font-weight:700;min-width:170px}
+.midi-riga .assegnato{color:var(--muted);flex:1 1 160px}
+.midi-riga .assegnato.si{color:var(--ink)}
+button.azione.piccola{padding:5px 11px;font-size:12px}
+button.togli{
+  appearance:none;cursor:pointer;font-family:inherit;font-size:12px;
+  background:none;border:none;color:var(--muted);text-decoration:underline;padding:4px;
+}
+button.togli:hover{color:var(--accent)}
 
 /* ---------- aiuto stampa ---------- */
 .aiuto{
@@ -234,6 +261,33 @@ footer a:hover{color:var(--accent)}
       Diteggiatura
     </label>
     <button class="azione" id="stampa" type="button">Stampa / PDF</button>
+    <button class="azione" id="midi-apri" type="button" aria-expanded="false" aria-controls="midi" title="Collega un controller MIDI (tastiera, pad)">MIDI</button>
+  </div>
+
+  <div class="midi no-print" id="midi" hidden>
+    <p class="midi-stato" id="midi-stato" aria-live="polite">Controller non collegato.</p>
+    <div class="midi-righe">
+      <div class="midi-riga" data-azione="avvio">
+        <span class="cosa">Avvio / stop metronomo</span>
+        <span class="assegnato">non assegnato</span>
+        <button class="azione piccola" type="button" aria-pressed="false">Impara</button>
+        <button class="togli" type="button">Togli</button>
+      </div>
+      <div class="midi-riga" data-azione="tempo">
+        <span class="cosa">Tempo</span>
+        <span class="assegnato">non assegnato</span>
+        <button class="azione piccola" type="button" aria-pressed="false">Impara</button>
+        <button class="togli" type="button">Togli</button>
+      </div>
+      <div class="midi-riga" data-azione="tap">
+        <span class="cosa">Tap tempo</span>
+        <span class="assegnato">non assegnato</span>
+        <button class="azione piccola" type="button" aria-pressed="false">Impara</button>
+        <button class="togli" type="button">Togli</button>
+      </div>
+    </div>
+    <p class="midi-nota">Premi «Impara», poi tocca sul controller il pad, il tasto o la manopola da usare. Per il tempo serve una manopola o un fader; per il tap tempo batti il pad a ritmo, sui battiti del metronomo. Le scelte restano salvate su questo browser.</p>
+    <p class="midi-ultimo" id="midi-ultimo"></p>
   </div>
 
   <div class="aiuto no-print" id="aiuto-stampa" hidden>
@@ -504,6 +558,7 @@ footer a:hover{color:var(--accent)}
     mVisivi = [];
     illumina(-1);
     elMetro.setAttribute("aria-pressed","false");
+    collegaIngressi();   // rimette lo stato del controller al posto di eventuali avvisi
   }
 
   function avviaMetronomo(){
@@ -511,6 +566,12 @@ footer a:hover{color:var(--accent)}
     var AC = window.AudioContext || window.webkitAudioContext;
     if(!AC) return;
     mCtx = new AC();
+    if(mCtx.state === "suspended"){
+      // avviato dal controller prima di qualsiasi clic: il browser tiene l'audio fermo
+      mCtx.resume();
+      var st = document.getElementById("midi-stato");
+      if(st) st.textContent = "Il browser blocca l'audio finché non clicchi una volta sulla pagina: clicca ovunque e il metronomo parte.";
+    }
     mProssimo = mCtx.currentTime + 0.08;
     mBattito = 0;
     mTimer = setInterval(pianifica, 25);
@@ -519,6 +580,174 @@ footer a:hover{color:var(--accent)}
   }
 
   elMetro.addEventListener("click", avviaMetronomo);
+
+  /* ---------- controller MIDI (Web MIDI, modalità «impara») ---------- */
+  // Un comando assegnato è {tipo:"nota"|"cc"|"rt", canale, num}.
+  // "rt" sono i messaggi Play/Stop/Continue (0xFA/0xFC/0xFB) dei tasti di trasporto.
+  var CHIAVE_MIDI = "spartiti-midi",
+      NOTE_IT = ["Do","Do♯","Re","Mi♭","Mi","Fa","Fa♯","Sol","La♭","La","Si♭","Si"],
+      RT_NOMI = {250:"Play", 251:"Continue", 252:"Stop"},
+      elMidi = document.getElementById("midi"),
+      elMidiApri = document.getElementById("midi-apri"),
+      elMidiStato = document.getElementById("midi-stato"),
+      elMidiUltimo = document.getElementById("midi-ultimo"),
+      midiAccesso = null, impara = null, tap = [],
+      assegnati = {};
+
+  try{ assegnati = JSON.parse(localStorage.getItem(CHIAVE_MIDI)) || {}; }catch(e){ assegnati = {}; }
+
+  function salvaAssegnati(){
+    try{ localStorage.setItem(CHIAVE_MIDI, JSON.stringify(assegnati)); }catch(e){}
+  }
+
+  function descrivi(c){
+    if(!c) return "non assegnato";
+    if(c.tipo === "nota") return "nota " + NOTE_IT[c.num % 12] + (Math.floor(c.num/12) - 1) + " (" + c.num + "), canale " + c.canale;
+    if(c.tipo === "cc") return "controllo CC " + c.num + ", canale " + c.canale;
+    return "tasto " + (RT_NOMI[c.num] || c.num) + " del trasporto";
+  }
+
+  function uguali(a, b){
+    return a && b && a.tipo === b.tipo && a.num === b.num && a.canale === b.canale;
+  }
+
+  function aggiornaRighe(){
+    Array.prototype.forEach.call(elMidi.querySelectorAll(".midi-riga"), function(r){
+      var az = r.dataset.azione, c = assegnati[az],
+          lab = r.querySelector(".assegnato"),
+          btn = r.querySelector(".azione");
+      lab.textContent = impara === az ? "tocca il controllo sul controller…" : descrivi(c);
+      lab.classList.toggle("si", !!c || impara === az);
+      btn.textContent = impara === az ? "Annulla" : "Impara";
+      btn.setAttribute("aria-pressed", impara === az ? "true" : "false");
+      r.querySelector(".togli").hidden = !c;
+    });
+  }
+
+  function impostaTempo(bpm){
+    var min = parseInt(elTempo.min,10), max = parseInt(elTempo.max,10);
+    bpm = Math.max(min, Math.min(max, Math.round(bpm/2)*2));
+    elTempo.value = bpm;
+    elTempoVal.textContent = bpm + " bpm";
+  }
+
+  function battiTap(){
+    var ora = performance.now();
+    if(tap.length && ora - tap[tap.length-1] > 2000) tap = [];
+    tap.push(ora);
+    if(tap.length > 5) tap.shift();
+    if(tap.length < 2) return;
+    var media = (tap[tap.length-1] - tap[0]) / (tap.length-1) / 1000;
+    // un colpo = un battito del metronomo (in 3/8 un ottavo); lo slider è in semiminime
+    impostaTempo(60 * 4 / (misura().den * media));
+  }
+
+  function leggiMessaggio(ev){
+    var d = ev.data, st = d[0];
+    if(st >= 0xF8 && !RT_NOMI[st]) return;          // clock, active sensing...
+    var c = null, valore = 0;
+    if(RT_NOMI[st]){ c = {tipo:"rt", num:st, canale:0}; valore = 127; }
+    else {
+      var tipo = st & 0xF0, canale = (st & 0x0F) + 1;
+      if(tipo === 0x90 && d[2] > 0){ c = {tipo:"nota", num:d[1], canale:canale}; valore = d[2]; }
+      else if(tipo === 0xB0){ c = {tipo:"cc", num:d[1], canale:canale}; valore = d[2]; }
+    }
+    if(!c) return;
+    elMidiUltimo.textContent = "Ultimo segnale ricevuto: " + descrivi(c) + (c.tipo === "cc" ? " — valore " + valore : "") + ".";
+
+    if(impara){
+      if(impara === "tempo" && c.tipo !== "cc") return;  // il tempo vuole una manopola o un fader
+      if(impara !== "tempo" && c.tipo === "cc" && valore === 0) return;
+      Object.keys(assegnati).forEach(function(k){ if(uguali(assegnati[k], c)) delete assegnati[k]; });
+      assegnati[impara] = c;
+      impara = null;
+      salvaAssegnati();
+      aggiornaRighe();
+      return;
+    }
+
+    if(uguali(assegnati.tempo, c)){
+      impostaTempo(40 + valore/127 * 100);
+    } else if(uguali(assegnati.avvio, c)){
+      if(c.tipo === "cc" && valore === 0) return;      // rilascio del tasto
+      avviaMetronomo();
+    } else if(uguali(assegnati.tap, c)){
+      if(c.tipo === "cc" && valore === 0) return;
+      battiTap();
+    }
+  }
+
+  function collegaIngressi(){
+    if(!midiAccesso) return;
+    var nomi = [];
+    midiAccesso.inputs.forEach(function(inp){
+      inp.onmidimessage = leggiMessaggio;
+      nomi.push(inp.name);
+    });
+    elMidiApri.classList.toggle("collegato", nomi.length > 0);
+    elMidiStato.textContent = nomi.length
+      ? "Collegato: " + nomi.join(", ") + "."
+      : "Nessun controller trovato: collegalo via USB, si aggancia da solo.";
+  }
+
+  function collegaMidi(){
+    if(midiAccesso) return;
+    if(!navigator.requestMIDIAccess){
+      elMidiStato.textContent = "Questo browser non legge i controller MIDI: usa Chrome o Edge da computer (su iPhone e iPad non funziona).";
+      return;
+    }
+    if(!window.isSecureContext){
+      elMidiStato.textContent = "Il MIDI funziona solo con la pagina aperta dal sito (https) o da localhost.";
+      return;
+    }
+    elMidiStato.textContent = "Chiedo il permesso di usare i dispositivi MIDI…";
+    navigator.requestMIDIAccess().then(function(acc){
+      midiAccesso = acc;
+      acc.onstatechange = collegaIngressi;
+      collegaIngressi();
+    }, function(){
+      elMidiStato.textContent = "Permesso negato: abilita i dispositivi MIDI per questo sito dalle impostazioni del browser (icona a sinistra dell'indirizzo).";
+    });
+  }
+
+  elMidiApri.addEventListener("click", function(){
+    elMidi.hidden = !elMidi.hidden;
+    elMidiApri.setAttribute("aria-expanded", elMidi.hidden ? "false" : "true");
+    if(!elMidi.hidden) collegaMidi();
+  });
+
+  Array.prototype.forEach.call(elMidi.querySelectorAll(".midi-riga"), function(r){
+    r.querySelector(".azione").addEventListener("click", function(){
+      impara = impara === r.dataset.azione ? null : r.dataset.azione;
+      aggiornaRighe();
+    });
+    r.querySelector(".togli").addEventListener("click", function(){
+      delete assegnati[r.dataset.azione];
+      if(impara === r.dataset.azione) impara = null;
+      salvaAssegnati();
+      aggiornaRighe();
+    });
+  });
+
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && impara){ impara = null; aggiornaRighe(); }
+  });
+  document.addEventListener("pointerdown", function(){
+    if(mCtx && mCtx.state === "suspended"){
+      mCtx.resume().then(function(){
+        mProssimo = mCtx.currentTime + 0.08;
+        collegaIngressi();
+      });
+    }
+  });
+
+  aggiornaRighe();
+  // Se il permesso è già stato dato, il controller si aggancia da solo all'apertura.
+  if(navigator.requestMIDIAccess && navigator.permissions && Object.keys(assegnati).length){
+    navigator.permissions.query({name:"midi"}).then(function(p){
+      if(p.state === "granted") collegaMidi();
+    }, function(){});
+  }
   elPlay.addEventListener("click", riproduci);
   elDita.addEventListener("change", disegna);
   elTempo.addEventListener("input", function(){
