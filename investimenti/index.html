@@ -435,6 +435,7 @@ function corpoAzione(p) {
     ${riga("Acquisto", acquisto(p))}
     ${riga("Tasse se la vendi oggi", `circa ${euro(a.tasse_se_vendi, 0)} <span class="muted">(26% del guadagno)</span>`)}
   </ul>
+  ${p.note_pagina ? p.note_pagina.map(t => `<p class="nota">${esc(t)}</p>`).join("") : ""}
   <p class="nota">Il prezzo è quello di riferimento di Borsa Italiana, in euro. Il valore segue il titolo e il cambio euro/dollaro. I dividendi sono piccoli e qui non si contano.</p>`;
 }
 
