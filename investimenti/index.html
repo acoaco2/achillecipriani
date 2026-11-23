@@ -391,6 +391,7 @@ const acquisto = p => p.data_acquisto_testo ? esc(p.data_acquisto_testo)
 function descrizione(p) {
   if (p.tipo === "btp") return `Titolo di Stato · scade ${meseAnno(p.scadenza)}`;
   if (p.tipo === "pip") return `Piano pensionistico (PIP) · versamenti fino al ${p.scadenza.slice(0, 4)}`;
+  if (p.tipo === "azione") return `Azione · ${num(p.quantita, 0)} azioni`;
   if (p.tipo === "certificato") {
     const w = p.analisi && p.analisi.peggiore;
     return `Certificato · ${w != null ? `indice peggiore al ${pct(w)}, la cedola arriva sopra il 70%` : `scade ${meseAnno(p.scadenza)}`}`;
@@ -424,6 +425,17 @@ function corpoFondo(p) {
     ${p.pac ? riga("Piano di accumulo", `${euro(p.pac.rata, 0)} ${(p.pac.frequenza_mesi || 1) === 1 ? "al mese" : `ogni ${p.pac.frequenza_mesi} mesi`}${p.pac.rate ? ` fino a ${meseAnno(finePac(p.pac))}` : ""}`) : ""}
   </ul>
   <p class="nota">Non stacca cedole: il guadagno resta nel valore della quota e si tassa solo quando vendi.</p>`;
+}
+
+function corpoAzione(p) {
+  const a = p.analisi;
+  return `<ul class="lista">
+    ${riga("Azioni", `${num(p.quantita, 0)}${p.mercato ? ` <span class="muted">· ${esc(p.mercato)}</span>` : ""}`)}
+    ${riga("Prezzo", `${num(p.prezzo, 2)} € <span class="muted">del ${data(p.data_prezzo, false)} · pagata ${num(p.pmc, 2)} €${p.pmc_ipotesi ? " (da confermare)" : ""}</span>`)}
+    ${riga("Acquisto", acquisto(p))}
+    ${riga("Tasse se la vendi oggi", `circa ${euro(a.tasse_se_vendi, 0)} <span class="muted">(26% del guadagno)</span>`)}
+  </ul>
+  <p class="nota">Il prezzo è quello di riferimento di Borsa Italiana, in euro. Il valore segue il titolo e il cambio euro/dollaro. I dividendi sono piccoli e qui non si contano.</p>`;
 }
 
 function corpoPip(p) {
@@ -489,7 +501,7 @@ function graficoCertificato(p) {
   legenda(el, serie);
 }
 
-const CORPO = { btp: corpoBtp, fondo: corpoFondo, pip: corpoPip, certificato: corpoCertificato };
+const CORPO = { btp: corpoBtp, fondo: corpoFondo, pip: corpoPip, certificato: corpoCertificato, azione: corpoAzione };
 
 function conto(c, i, box) {
   const colore = coloreConto(c, i);
@@ -546,6 +558,7 @@ function durata(D) {
   const righe = D.conti.flatMap((c, i) => c.posizioni.map(p => {
     const colore = coloreConto(c, i);
     if (p.tipo === "pip") return { p, c, colore, fine: p.scadenza, tipo: "scadenza", testo: `pensione, fine versamenti ${meseAnno(p.scadenza)}` };
+    if (p.tipo === "azione") return { p, c, colore, fine: null, tipo: "ignota", testo: "azione, nessuna scadenza" };
     if (p.tipo !== "fondo") return { p, c, colore, fine: p.scadenza, tipo: "scadenza", testo: `scade il ${data(p.scadenza)}` };
     const f = fineFondo(p);
     return f ? { p, c, colore, fine: f, tipo: "consigliata", testo: `consigliati ${p.detenzione_anni} anni, fino a ${meseAnno(f)}` }
@@ -610,13 +623,15 @@ function avvia(D) {
   D.conti.forEach((c, i) => conto(c, i, box));
 
   const SV = D.serie_valore;
-  $("sub-valore").textContent = SV.length < 10 ? `Lo storico parte dal ${data(SV[0].d)} e cresce di un punto per ogni giorno di borsa.` : `Dal ${data(SV[0].d)}.`;
+  const acquisti = D.conti.flatMap(c => c.posizioni).filter(p => p.nella_serie_dal && p.nella_serie_dal > SV[0].d)
+    .map(p => ` Il ${data(p.nella_serie_dal, false)} il totale sale per l'acquisto di ${p.nome}, non per un guadagno.`).join("");
+  $("sub-valore").textContent = (SV.length < 10 ? `Lo storico parte dal ${data(SV[0].d)} e cresce di un punto per ogni giorno di borsa.` : `Dal ${data(SV[0].d)}.`) + acquisti;
   linee($("c-valore"), SV, [{ k: "totale", nome: "Totale", colore: "var(--series)" }], { fmt: v => num(v, 0) + " €", fmtTip: v => euro(v, 0) });
   tabellaDati($("c-valore"), ["Giorno", "Totale"], SV.slice().reverse().map(r => [data(r.d), euro(r.totale, 0)]));
   composizione(D);
   durata(D);
 
-  $("fonti").innerHTML = "Prezzi: Borsa Italiana (titoli), OnlineSIM (fondi), Quantalys (pensione integrativa); indici: chiusure ufficiali STOXX. " +
+  $("fonti").innerHTML = "Prezzi: Borsa Italiana (titoli e azioni), OnlineSIM (fondi), Quantalys (pensione integrativa); indici: chiusure ufficiali STOXX. " +
     "Il valore non comprende ratei, liquidità e tasse. Le cedole di marzo e giugno 2026 del certificato risultano dal prezzo medio di carico della banca.";
 }
 </script>
