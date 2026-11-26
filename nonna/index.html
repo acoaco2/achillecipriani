@@ -14,6 +14,10 @@
   .blocco a { color: #1f5d63; }
   .esci { font: 13px system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; margin: 0; padding: 0 16px 32px; }
   .esci button { font: inherit; background: none; border: 0; padding: 8px; color: inherit; opacity: .7; text-decoration: underline; cursor: pointer; }
+  .tema { max-width: 780px; margin: 0 auto; text-align: right; font: 13px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .tema button { font: inherit; color: inherit; background: none; border: 1px solid currentColor; border-radius: 999px;
+                 padding: 4px 12px; opacity: .7; cursor: pointer; }
+  .tema button:hover { opacity: 1; }
 </style>
 </head>
 <body>
@@ -58,6 +62,29 @@
     document.body.insertAdjacentHTML("afterbegin", d.corpo);
 
     var root = document.querySelector(".viz-root") || document.body;
+
+    // tema chiaro/scuro: parte dal dispositivo, il bottone lo cambia e la scelta resta su questo browser
+    var TEMA = "nonna-tema";
+    var scuroDisp = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+    var tema = null;
+    try { tema = localStorage.getItem(TEMA); } catch (e) {}
+    if (tema !== "dark" && tema !== "light") tema = scuroDisp ? "dark" : "light";
+    var barra = document.createElement("p");
+    barra.className = "tema";
+    barra.innerHTML = '<button type="button"></button>';
+    var bt = barra.querySelector("button");
+    function applica() {
+      root.setAttribute("data-theme", tema);
+      bt.textContent = tema === "dark" ? "☀ Tema chiaro" : "☾ Tema scuro";
+    }
+    bt.addEventListener("click", function () {
+      tema = tema === "dark" ? "light" : "dark";
+      try { localStorage.setItem(TEMA, tema); } catch (e) {}
+      applica();
+    });
+    applica();
+    root.insertBefore(barra, root.firstChild);
+
     var esci = document.createElement("p");
     esci.className = "esci";
     esci.innerHTML = '<button type="button">Esci</button>';
